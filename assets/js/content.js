@@ -44,13 +44,13 @@ export const content = {
   meta: {
     title: {
       uk: 'Прус Марися — портфоліо',
-      en: 'Marysia Prus — portfolio',
+      en: 'Marisya Prus — portfolio',
     },
   },
 
   /** Дані художниці — використовуються в hero, контактах і футері. */
   artist: {
-    name: { uk: 'Прус Марися', en: 'Marysia Prus' },
+    name: { uk: 'Прус Марися', en: 'Marisya Prus' },
     tagline: { uk: 'художниця · Київ, Україна', en: 'artist · Kyiv, Ukraine' },
     photo: 'assets/img/hero.jpg',
     email: 'Prus.mmm22@gmail.com',
@@ -62,7 +62,7 @@ export const content = {
 
   /** Налаштування контактної форми (FormSubmit.co). */
   form: {
-    action: 'https://formsubmit.co/arrudenk@gmail.com',
+    action: 'https://formsubmit.co/Prus.mmm22@gmail.com',
     subject: 'Повідомлення з сайту-портфоліо',
     // Куди FormSubmit поверне користувача після відправки.
     // ?sent=1 вмикає банер «Дякуємо» (див. app.js).
