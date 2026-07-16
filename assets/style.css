@@ -109,7 +109,10 @@ section:last-of-type { border-bottom: none; }
 .grid-1 { grid-template-columns: 1fr; max-width: 860px; margin-left: auto; margin-right: auto; }
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-4 { grid-template-columns: repeat(2, 1fr); }
+/* Артбук: masonry на CSS-колонках — картинки різної висоти пакуються
+   щільно згори вниз, без порожнеч у рядках і без обрізання. */
+.grid-4 { display: block; column-count: 2; column-gap: 1.8rem; }
+.grid-4 figure { margin: 0 0 1.8rem; break-inside: avoid; }
 .grid-sketches { grid-template-columns: repeat(5, 1fr); gap: 1rem; }
 .grid figure img { width: 100%; }
 .grid-cap { display: block; margin-top: 1rem; }
@@ -231,7 +234,8 @@ section:last-of-type { border-bottom: none; }
   .split.reverse figure { order: 2; }
   .split figure { position: static; }
   .grid-3 { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
-  .grid-2, .grid-4 { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .grid-2 { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .grid-4 { column-count: 1; max-width: 480px; margin-left: auto; margin-right: auto; }
   .grid-sketches { grid-template-columns: repeat(3, 1fr); }
   .contact-inner { grid-template-columns: 1fr; }
 }
