@@ -203,6 +203,10 @@ section:last-of-type { border-bottom: none; }
 }
 .lightbox[hidden] { display: none; }
 .lightbox img { max-width: 92vw; max-height: 92vh; width: auto; height: auto; }
+/* Глобальне `img { display:block }` перебиває атрибут hidden — повертаємо
+   ховання, інакше порожня картинка лишається у флекс-рядку й зсуває
+   відео/PDF-iframe убік (помітно на вузькому екрані). */
+.lightbox img[hidden] { display: none; }
 .lightbox-frame { border: 0; cursor: default; }
 .lightbox.lb-video .lightbox-frame {
   width: min(1100px, 92vw, calc(88vh * 16 / 9));
