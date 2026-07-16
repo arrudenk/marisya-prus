@@ -66,7 +66,7 @@ export const content = {
     subject: 'Повідомлення з сайту-портфоліо',
     // Куди FormSubmit поверне користувача після відправки.
     // ?sent=1 вмикає банер «Дякуємо» (див. app.js).
-    next: 'https://arrudenk.github.io/marisya-prus/?sent=1#contact',
+    next: 'https://marisyaprus.com/?sent=1#contact',
     labels: {
       name: { uk: 'Ім’я', en: 'Name' },
       email: { uk: 'Email', en: 'Email' },
