@@ -11,12 +11,17 @@
  * не треба перепідписувати.
  */
 
-import { content } from './content.js';
+import { content as defaultContent } from './content.js';
 import { renderPage, t } from './render.js';
+import { loadContentFromSheet } from './sheet.js';
 
 const app = document.getElementById('app');
 
-/* ── Стан: поточна мова ──────────────────────────────────────── */
+/* ── Стан: контент і мова ────────────────────────────────────── */
+
+/** Активний контент. Спершу — вбудований дефолт (миттєвий рендер),
+ *  потім, якщо Google-таблиця налаштована й доступна, підміняється нею. */
+let activeContent = defaultContent;
 
 /** Вибір мови зберігається між візитами. localStorage може бути
  *  недоступний (приватний режим тощо) — тому try/catch. */
@@ -32,9 +37,9 @@ function setLang(next) {
 /* ── Рендер ──────────────────────────────────────────────────── */
 
 function render() {
-  app.innerHTML = renderPage(lang);
+  app.innerHTML = renderPage(lang, activeContent);
   document.documentElement.lang = lang;
-  document.title = t(content.meta.title, lang);
+  document.title = t(activeContent.meta.title, lang);
   document.body.style.overflow = ''; // на випадок ререндеру з відкритим лайтбоксом
 
   // FormSubmit повертає користувача на ?sent=1 — показуємо подяку.
@@ -43,7 +48,14 @@ function render() {
   }
 }
 
+// 1) Малюємо дефолт одразу — сторінка з'являється миттєво.
 render();
+
+// 2) Пробуємо підтягти контент із Google-таблиці; якщо вдалося —
+//    підміняємо й перемальовуємо один раз. Помилка/відсутність → лишається дефолт.
+loadContentFromSheet().then((fromSheet) => {
+  if (fromSheet) { activeContent = fromSheet; render(); }
+});
 
 /* ── Лайтбокс («режим кінотеатру») ───────────────────────────── */
 
@@ -101,9 +113,9 @@ document.addEventListener('click', (e) => {
   const langBtn = e.target.closest('.lang-toggle button');
   if (langBtn) return setLang(langBtn.dataset.lang);
 
-  // Клік по роботі в галереї → фото в лайтбоксі
+  // Клік по роботі в галереї → фото в лайтбоксі (повнорозмірна версія)
   const img = e.target.closest('.grid figure img, .split figure img');
-  if (img) return openLightbox({ src: img.src, alt: img.alt });
+  if (img) return openLightbox({ src: img.dataset.full || img.src, alt: img.alt });
 
   // Лінк з data-preview → відео/PDF у лайтбоксі замість переходу
   const link = e.target.closest('a[data-preview]');
