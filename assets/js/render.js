@@ -107,6 +107,66 @@ const workGroup = (group, lang) => `
   </div>
   ${group.caption ? `<div class="grid-cap">${t(group.caption, lang)}</div>` : ''}`;
 
+/* ── Проєкти (секції split/gallery → плитки + оверлей) ───────── */
+
+/** Рядок → слаг для URL-hash: маленькі літери, все крім літер/цифр → «-». */
+const slugify = (s) =>
+  String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
+
+/**
+ * Список проєктів із контенту. Проєкт = кожна секція типу split або gallery.
+ * Для кожної рахуємо slug (з англійської назви — стабільний для шерингу)
+ * і обкладинку: section.cover, якщо задана, інакше перше зображення секції.
+ * Обчислюється при рендері (разова робота), тому працює і для контенту
+ * з Google-таблиці без жодних змін у sheet.js.
+ */
+export function projectsFrom(data) {
+  const seen = new Set();
+  return data.sections
+    .filter((s) => s.type === 'split' || s.type === 'gallery')
+    .map((s, i) => {
+      let slug = slugify(t(s.title, 'en')) || `project-${i + 1}`;
+      if (seen.has(slug)) slug = `${slug}-${i + 1}`; // страховка від дублів назв
+      seen.add(slug);
+      const cover = s.cover
+        || (s.type === 'split' ? s.image.src : s.groups[0]?.works[0]?.src)
+        || '';
+      return { slug, cover, section: s };
+    });
+}
+
+/** Квадратні плитки проєктів: фото + затемнення + назва (hover знімає обидва).
+ *  Вставляються в мозаїку hero поруч із фото художниці. */
+const projectTiles = (lang, data) =>
+  projectsFrom(data).map((p) => `
+      <a class="project-tile" href="#p/${encodeURIComponent(p.slug)}">
+        <img src="${imageUrl(p.cover, { width: IMG.grid })}" alt="" loading="lazy">
+        <span class="tile-shade"></span>
+        <span class="tile-title">${t(p.section.title, lang)}</span>
+      </a>`).join('\n');
+
+/**
+ * HTML вмісту одного проєкту для оверлея. Використовує ті самі рендерери
+ * секцій, що й раніше рендерили їх на головній, — вигляд усередині
+ * оверлея ідентичний, стилі не дублюються.
+ */
+export function renderProjectHTML(slug, lang, data = content) {
+  const p = projectsFrom(data).find((x) => x.slug === slug);
+  if (!p) return null;
+  return sectionRenderers[p.section.type](p.section, lang, data);
+}
+
+/**
+ * Оверлей проєкту («режим кінотеатру») — один на сторінку, спершу порожній
+ * і прихований. app.js наповнює .project-panel через renderProjectHTML()
+ * при відкритті та очищує при закритті (звільняє DOM і картинки).
+ */
+const projectOverlay = () => `
+  <div class="project-overlay" id="project-overlay" hidden>
+    <button class="project-close" aria-label="Close">✕</button>
+    <div class="project-panel"></div>
+  </div>`;
+
 /* ── Секції (диспетчеризація за section.type) ────────────────── */
 
 const sectionRenderers = {
@@ -185,6 +245,13 @@ const header = (lang, data) => `
     </div>
   </header>`;
 
+/**
+ * Hero: ім'я зверху, під ним мозаїка — фото художниці як великий елемент
+ * сітки + плитки проєктів навколо. Фокус одразу на проєктах, а фото й ім'я
+ * зшиті з ними в одну композицію.
+ * Landscape: 4 колонки, фото 2×2 (разом із 8 плитками — рівний прямокутник
+ * 4×3). Portrait (див. CSS): 2 колонки, фото вертикальне 1×2.
+ */
 const hero = (lang, data) => `
   <section class="hero">
     <div class="hero-text">
@@ -192,9 +259,12 @@ const hero = (lang, data) => `
       <h1>${t(data.artist.name, lang)}</h1>
       <p class="hero-sub">${t(data.artist.tagline, lang)}</p>
     </div>
-    <figure class="hero-photo">
-      <img src="${imageUrl(data.artist.photo, { width: IMG.full })}" alt="${t(data.artist.name, lang)}" fetchpriority="high">
-    </figure>
+    <div class="hero-mosaic">
+      <figure class="mosaic-photo">
+        <img src="${imageUrl(data.artist.photo, { width: IMG.full })}" alt="${t(data.artist.name, lang)}" fetchpriority="high">
+      </figure>
+      ${projectTiles(lang, data)}
+    </div>
   </section>`;
 
 const footer = (lang, data) => `
@@ -224,16 +294,20 @@ const lightbox = () => `
  * app.js викликає її при старті, після завантаження таблиці й при зміні мови.
  */
 export function renderPage(lang, data = content) {
-  const sections = data.sections
-    .map((s) => sectionRenderers[s.type](s, lang, data))
-    .join('\n');
+  // Секції-проєкти (split/gallery) на головній не рендеряться — їхні плитки
+  // живуть у мозаїці hero. Тут лишаються statement (одразу під мозаїкою)
+  // і контакти внизу.
+  const parts = data.sections
+    .filter((s) => s.type !== 'split' && s.type !== 'gallery')
+    .map((s) => sectionRenderers[s.type](s, lang, data));
 
   return `
     ${header(lang, data)}
     <main id="top">
       ${hero(lang, data)}
-      ${sections}
+      ${parts.join('\n')}
     </main>
     ${footer(lang, data)}
-    ${lightbox()}`;
+    ${lightbox()}
+    ${projectOverlay()}`;
 }

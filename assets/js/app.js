@@ -12,7 +12,7 @@
  */
 
 import { content as defaultContent } from './content.js';
-import { renderPage, t } from './render.js';
+import { renderPage, renderProjectHTML, t } from './render.js';
 import { loadContentFromSheet } from './sheet.js';
 
 const app = document.getElementById('app');
@@ -46,6 +46,10 @@ function render() {
   if (new URLSearchParams(location.search).get('sent') === '1') {
     document.getElementById('form-thanks').hidden = false;
   }
+
+  // Ререндер (зміна мови, підміна контентом із таблиці) створює порожній
+  // оверлей — якщо в адресі відкритий проєкт, наповнюємо його заново.
+  syncProjectFromHash();
 }
 
 // 1) Малюємо дефолт одразу — сторінка з'являється миттєво.
@@ -56,6 +60,50 @@ render();
 loadContentFromSheet().then((fromSheet) => {
   if (fromSheet) { activeContent = fromSheet; render(); }
 });
+
+/* ── Оверлей проєкту ─────────────────────────────────────────── */
+
+/**
+ * Оверлей повністю керується hash-ом адреси: плитка — це звичайний лінк
+ * на #p/<slug>, тож відкриття/закриття, кнопка «назад» браузера і
+ * прямі посилання (шеринг) працюють через один механізм — hashchange.
+ */
+
+/** Слаг проєкту з поточної адреси або null (location.hash приходить закодованим). */
+function projectSlugFromHash() {
+  const m = location.hash.match(/^#p\/(.+)$/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+const isProjectOpen = () => !document.getElementById('project-overlay').hidden;
+
+/** Приводить оверлей у відповідність до адреси: наповнює й показує або ховає. */
+function syncProjectFromHash() {
+  const overlay = document.getElementById('project-overlay');
+  const panel = overlay.querySelector('.project-panel');
+  const slug = projectSlugFromHash();
+  const html = slug ? renderProjectHTML(slug, lang, activeContent) : null;
+
+  if (html) {
+    panel.innerHTML = html;
+    overlay.hidden = false;
+    overlay.scrollTop = 0;
+    document.body.style.overflow = 'hidden'; // фон під оверлеєм не скролиться
+  } else {
+    overlay.hidden = true;
+    panel.innerHTML = ''; // звільняє DOM і картинки закритого проєкту
+    document.body.style.overflow = '';
+  }
+}
+
+/** Закрити оверлей = прибрати слаг з адреси; решту зробить hashchange. */
+function closeProject() {
+  if (projectSlugFromHash() !== null) location.hash = '';
+}
+
+// Прямі посилання (шеринг) покриває перший render(): він теж викликає
+// syncProjectFromHash(), тож окремого коду для старту не треба.
+window.addEventListener('hashchange', syncProjectFromHash);
 
 /* ── Лайтбокс («режим кінотеатру») ───────────────────────────── */
 
@@ -103,7 +151,8 @@ function closeLightbox() {
   frame.src = ''; // вивантажує Drive-плеєр і зупиняє відтворення
   frame.hidden = true;
   box.classList.remove('lb-video', 'lb-pdf');
-  document.body.style.overflow = '';
+  // Якщо під лайтбоксом відкритий проєкт — скрол фону лишається заблокованим.
+  document.body.style.overflow = isProjectOpen() ? 'hidden' : '';
 }
 
 /* ── Події (делегування на document) ─────────────────────────── */
@@ -131,11 +180,16 @@ document.addEventListener('click', (e) => {
   // Клік по фону лайтбокса або по ✕ → закрити.
   // (Кліки всередині iframe сюди не долітають — це нормально,
   //  для відео/PDF закриття працює через ✕ і Esc.)
-  if (e.target.closest('#lightbox')) closeLightbox();
+  if (e.target.closest('#lightbox')) return closeLightbox();
+
+  // Оверлей проєкту: ✕ або клік по затемненому фону (не по панелі) → закрити.
+  if (e.target.closest('.project-close')) return closeProject();
+  if (e.target.id === 'project-overlay') closeProject();
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !document.getElementById('lightbox').hidden) {
-    closeLightbox();
-  }
+  if (e.key !== 'Escape') return;
+  // Спершу закривається те, що зверху: лайтбокс, потім оверлей проєкту.
+  if (!document.getElementById('lightbox').hidden) return closeLightbox();
+  if (isProjectOpen()) closeProject();
 });
