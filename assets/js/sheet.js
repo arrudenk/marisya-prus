@@ -100,26 +100,15 @@ const toParagraphs = (o) => {
   return uk.map((u, idx) => ({ uk: u, en: en[idx] || u }));
 };
 
-/** Витягує Google Drive file ID з посилання або голого ID. */
-const DRIVE_RE = /(?:\/d\/|[?&]id=)([A-Za-z0-9_-]{20,})/;
-const driveId = (v) => {
-  const s = (v || '').trim();
-  const m = s.match(DRIVE_RE);
-  return m ? m[1] : (/^[A-Za-z0-9_-]{20,}$/.test(s) ? s : null);
-};
-
-/** Лінк секції (відео/PDF). undefined якщо URL порожній. */
+/** Лінк секції. Якщо задано «Тип-лінка» (video/pdf) — відкриється в
+ *  лайтбоксі; адресу для iframe виведе render.js з href (YouTube/Drive).
+ *  undefined якщо URL порожній. */
 const buildLink = (o) => {
   const href = (o['Лінк-URL'] || '').trim();
   if (!href) return undefined;
   const label = bi(o, 'Лінк-текст (укр)', 'Лінк-текст (eng)') || { uk: '↗', en: '↗' };
-  const link = { label, href };
-  const id = driveId(href);
-  if (id) {
-    link.preview = `https://drive.google.com/file/d/${id}/preview`;
-    link.embed = (o['Тип-лінка'] || 'video').trim();
-  }
-  return link;
+  const embed = (o['Тип-лінка'] || '').trim();
+  return embed ? { label, href, embed } : { label, href };
 };
 
 /**

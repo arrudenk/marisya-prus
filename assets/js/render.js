@@ -44,6 +44,23 @@ export function imageUrl(value, { width } = {}) {
   return v;
 }
 
+/**
+ * Перетворює звичайне посилання на URL для вбудовування в iframe лайтбокса.
+ * Підтримує YouTube (watch / youtu.be / embed / shorts) і Google Drive.
+ * Так у таблицю можна вставити будь-яке з цих посилань — сайт сам зробить
+ * правильний embed. Невідомий тип повертається як є (фолбек).
+ */
+const YT_RE = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+export function embedUrl(href) {
+  if (!href) return '';
+  const h = String(href).trim();
+  const yt = h.match(YT_RE);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}?rel=0`;
+  const dr = h.match(DRIVE_RE);
+  if (dr) return `https://drive.google.com/file/d/${dr[1]}/preview`;
+  return h;
+}
+
 /* ── Дрібні будівельні блоки ─────────────────────────────────── */
 
 /** Абзаци тексту: масив L-об'єктів → <p>…</p><p>…</p> */
@@ -51,15 +68,15 @@ const paragraphs = (list, lang) =>
   (list ?? []).map((p) => `<p>${t(p, lang)}</p>`).join('\n');
 
 /**
- * Зовнішній лінк секції. Якщо в лінка є data-preview —
- * app.js перехопить клік і відкриє його в лайтбоксі («режим кінотеатру»)
- * замість переходу на Google Drive. href лишається робочим фолбеком
- * (наприклад, для відкриття у новій вкладці через середню кнопку миші).
+ * Зовнішній лінк секції. Якщо задано link.embed ('video'/'pdf') —
+ * app.js перехопить клік і відкриє вміст у лайтбоксі («режим кінотеатру»)
+ * замість переходу. Адреса для iframe виводиться з href через embedUrl()
+ * (YouTube / Drive). href лишається робочим фолбеком (нова вкладка тощо).
  */
 const extLink = (link, lang) => {
   if (!link) return '';
-  const previewAttrs = link.preview
-    ? ` data-preview="${link.preview}" data-embed="${link.embed}"`
+  const previewAttrs = link.embed
+    ? ` data-preview="${embedUrl(link.href)}" data-embed="${link.embed}"`
     : '';
   return `<p><a class="ext-link" href="${link.href}" target="_blank" rel="noopener"${previewAttrs}>${t(link.label, lang)}</a></p>`;
 };

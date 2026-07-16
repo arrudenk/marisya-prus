@@ -19,10 +19,10 @@
  * }
  * Link     = {
  *   label: L,           — текст лінка
- *   href: string,       — куди веде (відкриється в новій вкладці)
- *   preview?: string,   — Google Drive /preview URL → відкриється
- *                         в лайтбоксі («режим кінотеатру») замість переходу
- *   embed?: 'video'|'pdf' — пропорції лайтбокса для preview
+ *   href: string,       — куди веде (YouTube або Google Drive)
+ *   embed?: 'video'|'pdf' — якщо задано, відкривається в лайтбоксі
+ *                         («режим кінотеатру»); адреса для iframe виводиться
+ *                         з href автоматично (render.js → embedUrl)
  * }
  *
  * Секції (поле type вибирає рендерер у render.js):
@@ -135,7 +135,6 @@ export const content = {
       link: {
         label: { uk: 'Відеозапис роботи ↗', en: 'Video documentation ↗' },
         href: 'https://drive.google.com/file/d/1e1mZJLeo_56GDrpwHbdxY4QUyh7T0z08/view?usp=sharing',
-        preview: 'https://drive.google.com/file/d/1e1mZJLeo_56GDrpwHbdxY4QUyh7T0z08/preview',
         embed: 'video',
       },
       image: { src: 'assets/img/performance.jpg', alt: 'Природа співчуття — перформанс' },
@@ -206,7 +205,6 @@ export const content = {
       link: {
         label: { uk: 'Електронна версія щоденника ↗', en: 'Digital version of the diary ↗' },
         href: 'https://drive.google.com/file/d/1DdH2s_T4d8zwFg7UMD0dLHuFDxRL68NY/view?usp=drive_link',
-        preview: 'https://drive.google.com/file/d/1DdH2s_T4d8zwFg7UMD0dLHuFDxRL68NY/preview',
         embed: 'pdf',
       },
       groups: [
