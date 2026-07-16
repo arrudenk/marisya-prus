@@ -216,6 +216,7 @@ export const content = {
             { src: 'assets/img/artbook-stand.jpg', alt: 'Артбук (не)забуті історії тварин' },
             { src: 'assets/img/artbook-1.jpg', alt: 'Артбук — розворот' },
             { src: 'assets/img/artbook-2.jpg', alt: 'Артбук — сторінка' },
+            { src: 'assets/img/artbook-3.jpg', alt: 'Артбук — сторінка' },
             { src: 'assets/img/artbook-4.jpg', alt: 'Артбук — сторінка' },
           ],
           caption: {
