@@ -1,94 +1,153 @@
+/* ============================================================
+   Стилі редизайну. Каркас:
+     topbar (fixed зверху):  about · ім'я · дослідження
+     main:                   квадратний слайдер фото
+     bottombar (fixed знизу): укр/en · «Записки…» · contacts
+   Сторінки відкриваються панелями-шторками (transform, композитор):
+     .page-panel   — згори вниз, світла (about + проєкти)
+     .zapysky-panel — знизу вгору, темна («Записки»)
+   Темна тема: html.dark — плавне перефарбування барів і фону.
+   Шрифт скрізь — IBM Plex Mono (кирилиця + латиниця).
+   ============================================================ */
+
 /* ===== Base ===== */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
-  font-weight: 300;
-  font-size: 17px;
-  line-height: 1.65;
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.7;
   color: #111;
   background: #fff;
+  /* Плавне перефарбування в чорне при відкритті «Записок» (html.dark). */
+  transition: background-color 0.6s ease, color 0.6s ease;
 }
 img { max-width: 100%; height: auto; display: block; }
-a { color: #111; }
-h1, h2, h3 { font-family: 'Bitter', Georgia, serif; font-weight: 600; line-height: 1.25; }
-h2 { font-size: clamp(1.5rem, 3.2vw, 2.1rem); margin: 0 0 1.2rem; }
+a { color: inherit; }
+h1, h2, h3 { font-family: inherit; font-weight: 600; line-height: 1.3; }
+h2 { font-size: clamp(1.2rem, 2.6vw, 1.6rem); margin: 0 0 1.2rem; }
 figure { margin: 0; }
 figcaption {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: #555;
   text-align: center;
   margin-top: 0.6rem;
   line-height: 1.5;
 }
 
-/* ===== Top bar ===== */
-.topbar {
+/* Темна тема (відкриті «Записки»): фон і бари стають чорними. */
+html.dark body { background: #0a0a0a; color: #e8e8e8; }
+
+/* ===== Бари (fixed, завжди поверх контенту й панелей) ===== */
+.topbar, .bottombar {
   position: fixed;
-  top: 0; left: 0; right: 0;
+  left: 0; right: 0;
   display: grid;
-  grid-template-columns: 1fr auto 1fr; /* мова | ім'я (центр) | меню */
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 0.7rem 1.4rem;
-  background: rgba(255,255,255,0.92);
+  gap: 0.8rem;
+  padding: 0.75rem 1.4rem;
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(6px);
-  border-bottom: 1px solid #eee;
   z-index: 100;
+  font-size: 0.88rem;
+  transition: background-color 0.6s ease, color 0.6s ease, border-color 0.6s ease;
 }
-.topbar .lang-toggle { justify-self: start; }
+.topbar { top: 0; border-bottom: 1px solid #eee; }
+.bottombar { bottom: 0; border-top: 1px solid #eee; }
+html.dark .topbar, html.dark .bottombar {
+  background: rgba(10, 10, 10, 0.92);
+  color: #e8e8e8;
+  border-color: #222;
+}
+
+/* topbar: about (зліва) · ім'я (центр) · дослідження (справа) */
+.topbar-about {
+  justify-self: start;
+  text-decoration: none;
+  color: #555;
+  letter-spacing: 0.04em;
+}
+.topbar-about:hover { color: #111; text-decoration: underline; text-underline-offset: 4px; }
 .topbar-name {
   justify-self: center;
   text-align: center;
-  font-family: 'Bitter', Georgia, serif;
-  font-weight: 600;
   text-decoration: none;
-  font-size: 1rem;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 .topbar .nav-menu { justify-self: end; }
-.lang-toggle { display: flex; align-items: center; gap: 0.35rem; color: #999; font-size: 0.9rem; }
+html.dark .topbar-about { color: #aaa; }
+html.dark .topbar-about:hover { color: #fff; }
+
+/* bottombar: укр/en (зліва) · «Записки…» (центр) · contacts (справа) */
+.bottombar .lang-toggle { justify-self: start; }
+.zapysky-link {
+  justify-self: center;
+  text-align: center;
+  text-decoration: none;
+  color: #333;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+}
+.zapysky-link:hover { color: #000; text-decoration: underline; text-underline-offset: 4px; }
+html.dark .zapysky-link { color: #ccc; }
+html.dark .zapysky-link:hover { color: #fff; }
+.contacts-link {
+  justify-self: end;
+  background: none;
+  border: none;
+  font: inherit;
+  color: #555;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  letter-spacing: 0.04em;
+}
+.contacts-link:hover { color: #111; text-decoration: underline; text-underline-offset: 4px; }
+html.dark .contacts-link { color: #aaa; }
+html.dark .contacts-link:hover { color: #fff; }
+
+.lang-toggle { display: flex; align-items: center; gap: 0.3rem; color: #999; }
 .lang-toggle button {
   background: none;
   border: none;
   font: inherit;
-  font-size: 0.9rem;
   color: #999;
   cursor: pointer;
-  padding: 0.2rem 0.3rem;
+  padding: 0.2rem 0.25rem;
   letter-spacing: 0.05em;
 }
-.lang-toggle button.active { color: #111; font-weight: 500; }
+.lang-toggle button.active { color: #111; font-weight: 600; }
 .lang-toggle button:hover { color: #111; }
+html.dark .lang-toggle button.active { color: #fff; }
+html.dark .lang-toggle button:hover { color: #fff; }
 
-/* Меню розділів (випадаюче). */
+/* ===== Дропдаун «дослідження» ===== */
 .nav-menu { position: relative; }
 .nav-toggle {
   background: none;
   border: none;
   font: inherit;
-  font-size: 1.15rem;
-  line-height: 1;
   color: #555;
   cursor: pointer;
-  padding: 0.2rem 0.35rem;
+  padding: 0.2rem 0;
+  letter-spacing: 0.04em;
 }
-.nav-toggle:hover { color: #111; }
-/* Випадає плавно як окремий блок: розгортається за висотою
-   (grid-template-rows 0fr→1fr — плавно до точної висоти вмісту) +
-   проявляється й трохи опускається. grid-template-rows — layout-анімація,
-   але вона коротка (0.3с) і на крихітному піддереві меню, лише при
-   відкритті/закритті — вартість нехтовна, нічого не крутиться постійно. */
+.nav-toggle:hover { color: #111; text-decoration: underline; text-underline-offset: 4px; }
+html.dark .nav-toggle { color: #aaa; }
+html.dark .nav-toggle:hover { color: #fff; }
+/* Випадає плавно як блок: розгортається за висотою (grid-template-rows
+   0fr→1fr — до точної висоти вмісту) + проявляється. Layout-анімація
+   коротка (0.3с), на крихітному піддереві, лише при відкритті/закритті. */
 .nav-dropdown {
   position: absolute;
-  top: calc(100% + 0.6rem);
+  top: calc(100% + 0.7rem);
   right: 0;
-  /* Не вужче за плитку мозаїки: у 4-колонковій сітці плитка ≈ 25vw − проміжки.
-     clamp тримає розумні межі на дуже вузьких/широких екранах. */
-  min-width: clamp(220px, calc(25vw - 1.6rem), 340px);
+  min-width: clamp(260px, 30vw, 420px);
   background: #fff;
   border: 1px solid #eee;
-  border-radius: 6px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.13);
   z-index: 120;
   display: grid;
@@ -110,77 +169,125 @@ figcaption {
   padding: 0.55rem 1.15rem;
   color: #555;
   text-decoration: none;
-  /* Моноспейс (системний — без окремого завантаження шрифта), по центру. */
-  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   letter-spacing: 0.02em;
-  text-align: center;
-  white-space: nowrap;
+  text-align: right;
 }
 .nav-item:hover { background: #f4f4f4; color: #111; }
-.nav-item.nav-strong { font-weight: 700; color: #111; }
+html.dark .nav-dropdown { background: #141414; border-color: #2a2a2a; }
+html.dark .nav-item { color: #bbb; }
+html.dark .nav-item:hover { background: #1f1f1f; color: #fff; }
 
-/* Відступ під фіксовану шапку при прокрутці до секції. */
-.mosaic-divider, .hero-mosaic .project-tile, .contact { scroll-margin-top: 72px; }
-
-/* ===== Layout ===== */
-main { max-width: 1100px; margin: 0 auto; padding: 0 1.4rem; }
-section { padding: 4.5rem 0; border-bottom: 1px solid #eee; }
-section:last-of-type { border-bottom: none; }
-
-/* ===== Hero (ім'я + мозаїка: фото художниці серед плиток проєктів) ===== */
-.hero { padding-top: 6.5rem; }
-.hero-text { text-align: right; margin-bottom: 2.4rem; }
-.kicker {
-  font-family: 'Bitter', Georgia, serif;
-  font-weight: 700;
-  letter-spacing: 0.28em;
-  font-size: 0.95rem;
-  color: #111;
-  text-transform: uppercase;
-}
-.kicker .dot { font-size: 0.6em; vertical-align: middle; margin: 0 0.6em; }
-.hero h1 { font-size: clamp(2.4rem, 6vw, 4rem); margin: 0.4rem 0 0.8rem; font-weight: 400; }
-.hero-sub { color: #666; letter-spacing: 0.04em; }
-
-/* Мозаїка: landscape — 4 колонки. Зверху дві великі плитки 2×2 (Artist
-   Statement + Artworks) — вони заповнюють перші два ряди; далі роздільник
-   «Проєкти» на всю ширину; під ним плитки проєктів (1×1). Висоту рядів
-   задають квадратні плитки (aspect-ratio). */
-.hero-mosaic {
+/* ===== Головна: квадратний слайдер під ім'ям ===== */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 5.2rem 1.4rem 5.4rem; /* місце під фіксовані бари */
+  /* Слайдер по центру вікна між барами (важливо на портреті,
+     де квадрат вужчий за доступну висоту). */
+  min-height: 100svh;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.2rem;
-}
-/* Роздільник між великими плитками й проєктами — на всю ширину сітки. */
-.mosaic-divider {
-  grid-column: 1 / -1;
-  display: flex;
   align-items: center;
-  gap: 1rem;
-  margin: 0.6rem 0 0;
-  font-family: 'Bitter', Georgia, serif;
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #333;
 }
-.mosaic-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #ddd;
+/* Квадрат вписується у вікно між барами (100svh мінус бари/крапки/поля). */
+.photo-slider { margin: 0 auto; }
+.fc-window {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  width: min(100%, calc(100svh - 230px));
+  margin: 0 auto;
+  background: #eee;
+  cursor: grab;
+  touch-action: pan-y;          /* лишає вертикальний скрол сторінки на тачі */
 }
+.fc-window:active { cursor: grabbing; }
+html.dark .fc-window { background: #161616; }
+.fc-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.55s ease;
+  will-change: transform;
+}
+.fc-track.dragging { transition: none; } /* без інерції під час перетягування */
+.fc-slide { flex: 0 0 100%; height: 100%; }
+.fc-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;            /* неквадратні фото обрізаються по центру */
+  object-position: center;
+  pointer-events: none;         /* щоб драг не «хапав» саме зображення */
+  user-select: none;
+}
+.fc-dots { display: flex; justify-content: center; gap: 0.5rem; margin: 1rem 0 0; }
+.fc-dot {
+  width: 8px; height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #ccc;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.fc-dot:hover { background: #999; }
+.fc-dot.active { background: #111; transform: scale(1.25); }
+html.dark .fc-dot { background: #333; }
+html.dark .fc-dot.active { background: #eee; }
 
-/* ===== Statement ===== */
-.statement { max-width: 800px; margin: 0 auto; }
+/* ===== Панелі-шторки ===== */
+/* Обидві завжди в DOM; закрита = повністю за краєм екрана (transform —
+   композитор, без relayout). Бари (z=100) лишаються поверх (панелі z<100).
+   Прокрутка — всередині панелі; фон блокує app.js (updateBackgroundLock). */
+.page-panel, .zapysky-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4.6rem 1.4rem 5rem; /* вміст не пірнає під бари */
+  transition: transform 0.55s ease;
+}
+.page-panel {
+  background: #fff;
+  transform: translateY(-100%);  /* закрита: за верхнім краєм */
+}
+.zapysky-panel {
+  background: #0a0a0a;
+  color: #e8e8e8;
+  transform: translateY(100%);   /* закрита: за нижнім краєм */
+  z-index: 55;
+  /* Шторка «Записок» їде трохи пізніше — сайт встигає потемніти. */
+  transition: transform 0.55s ease 0.15s;
+}
+.page-panel.open, .zapysky-panel.open { transform: translateY(0); }
+.panel-inner { max-width: 1000px; margin: 0 auto; }
+.page-panel .panel-inner > section { padding: 1.5rem 0 3rem; }
+
+/* Сторінки «Записок»: колонка квадратних слотів (сторінки PDF 1:1).
+   aspect-ratio резервує висоту ДО завантаження картинок — стрибок у низ
+   панелі точний, layout не смикається, lazy-load працює. */
+.zp-pages { display: flex; flex-direction: column; gap: 1.4rem; padding: 1rem 0 2rem; }
+.zp-page {
+  width: min(100%, 680px);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  background: #111;
+}
+.zp-page img { width: 100%; height: 100%; object-fit: contain; }
+
+/* ===== Вміст сторінок (statement / split / gallery) ===== */
+.statement { max-width: 760px; margin: 0 auto; }
 .statement h2 { text-align: center; margin-bottom: 2rem; }
 .statement p { margin: 0 0 1.2rem; }
 
-/* ===== Work sections ===== */
 .work-text p { margin: 0 0 1rem; }
-.work-text .kicker { font-size: 0.8rem; letter-spacing: 0.18em; color: #777; margin-bottom: 0.4rem; }
+.work-text .kicker {
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  color: #777;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
 .work-text.centered { max-width: 820px; margin: 0 auto 2.5rem; text-align: center; }
 .split {
   display: grid;
@@ -193,7 +300,6 @@ section:last-of-type { border-bottom: none; }
 .split.reverse figure { order: 1; }
 .split figure { position: sticky; top: 5rem; }
 
-/* ===== Grids ===== */
 .grid { display: grid; gap: 1.8rem; margin-top: 2rem; }
 .grid-1 { grid-template-columns: 1fr; max-width: 860px; margin-left: auto; margin-right: auto; }
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
@@ -204,7 +310,7 @@ section:last-of-type { border-bottom: none; }
 .grid-4 figure { margin: 0 0 1.8rem; break-inside: avoid; }
 .grid-sketches { grid-template-columns: repeat(5, 1fr); gap: 1rem; }
 .grid figure img { width: 100%; }
-.grid-cap { display: block; margin-top: 1rem; }
+.grid-cap { display: block; margin-top: 1rem; font-size: 0.82rem; color: #555; text-align: center; }
 /* Ціна в правому нижньому кутку картини (накладка поверх зображення). */
 .work-media { position: relative; display: block; }
 .work-price {
@@ -213,224 +319,58 @@ section:last-of-type { border-bottom: none; }
   bottom: 0.55rem;
   background: rgba(0, 0, 0, 0.62);
   color: #fff;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   letter-spacing: 0.02em;
   padding: 0.22rem 0.5rem;
-  border-radius: 2px;
   pointer-events: none;
 }
-.sub-title {
-  text-align: center;
-  margin: 3.5rem 0 0;
-  font-size: 1.15rem;
-  font-weight: 600;
-}
-.ext-link {
-  display: inline-block;
-  margin-top: 0.4rem;
-  font-weight: 400;
-  text-underline-offset: 4px;
-}
-
-/* Clickable images */
+.sub-title { text-align: center; margin: 3.5rem 0 0; font-size: 1.05rem; font-weight: 600; }
+.ext-link { display: inline-block; margin-top: 0.4rem; text-underline-offset: 4px; }
 .grid figure img, .split figure img { cursor: zoom-in; }
 
-
-/* ===== Project tiles (мозаїка hero) ===== */
-/* Квадрат: фото на всю плитку, поверх — затемнення + назва.
-   Hover знімає затемнення і ховає назву — видно чисте фото.
-   Анімуються лише opacity/transform (композитор, без relayout). */
-.project-tile {
-  position: relative;
-  display: block;
-  aspect-ratio: 1;
-  overflow: hidden;
-  text-decoration: none;
-  background: #eee;
-}
-/* Велика плитка «Artworks» — займає 2×2 клітинки. Разом із фото 2×2
-   і 8 звичайними плитками мозаїка складається в рівний прямокутник 4×4. */
-.project-tile.feature { grid-column: span 2; grid-row: span 2; }
-.project-tile.feature .tile-title { font-size: clamp(1.3rem, 2.4vw, 1.9rem); }
-.project-tile img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-/* За замовчуванням плитка — чисте фото: затемнення й назва приховані
-   (opacity 0). З'являються при взаємодії (див. нижче). */
-.tile-shade {
-  position: absolute;
-  inset: 0;
-  background: rgba(12, 12, 12, 0.55);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}
-.tile-title {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.2rem;
-  text-align: center;
-  color: #fff;
-  font-family: 'Bitter', Georgia, serif;
-  font-weight: 600;
-  font-size: clamp(1rem, 1.6vw, 1.25rem);
-  line-height: 1.35;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}
-/* Показуємо затемнення+назву: наведення/фокус/затискання (десктоп і тач),
-   а також клас .revealed — його на тачі вішає скрол-спостерігач в app.js. */
-.project-tile:hover .tile-shade,
-.project-tile:hover .tile-title,
-.project-tile:focus-visible .tile-shade,
-.project-tile:focus-visible .tile-title,
-.project-tile:active .tile-shade,
-.project-tile:active .tile-title,
-.project-tile.revealed .tile-shade,
-.project-tile.revealed .tile-title { opacity: 1; }
-.project-tile:hover img,
-.project-tile:active img { transform: scale(1.04); }
-
-/* ===== Project overlay («режим кінотеатру») ===== */
-/* Затемнений фон на весь екран (над topbar, під лайтбоксом),
-   всередині — біла панель зі звичайними секціями .work/.split. */
-.project-overlay {
+/* ===== Маленьке віконце contacts («режим кінотеатру») ===== */
+.contact-modal {
   position: fixed;
   inset: 0;
   z-index: 150;
   background: rgba(10, 10, 10, 0.93);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 3.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.4rem;
 }
-.project-overlay[hidden] { display: none; }
-.project-panel {
-  max-width: 1000px;
-  margin: 0 auto;
+.contact-modal[hidden] { display: none; }
+.contact-card {
+  position: relative;
   background: #fff;
-  padding: 0.5rem 2.5rem 2rem;
+  color: #111;
+  padding: 2.4rem 3rem;
+  text-align: center;
+  max-width: min(92vw, 480px);
 }
-.project-close {
-  position: fixed;
-  top: 1rem; right: 1.4rem;
-  z-index: 160;
+.contact-name { margin: 0 0 0.8rem; font-weight: 600; letter-spacing: 0.03em; }
+.contact-mail {
+  font-size: clamp(0.85rem, 2.6vw, 1rem);
+  text-underline-offset: 5px;
+  word-break: break-all;
+}
+.modal-close {
+  position: absolute;
+  top: 0.5rem; right: 0.7rem;
   background: none;
   border: none;
-  color: #fff;
-  font-size: 1.6rem;
-  cursor: pointer;
-}
-
-/* ===== Contact ===== */
-.contact h2 { text-align: center; }
-.contact-inner {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 3rem;
-  max-width: 900px;
-  margin: 2rem auto 0;
-}
-.contact-info p { margin: 0 0 0.9rem; }
-.contact-name { font-family: 'Bitter', Georgia, serif; font-size: 1.2rem; font-weight: 600; }
-.contact-form { display: flex; flex-direction: column; gap: 1rem; }
-.contact-form label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.88rem; color: #555; }
-.contact-form input, .contact-form textarea {
   font: inherit;
-  font-size: 1rem;
-  color: #111;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  background: #fff;
-}
-.contact-form input:focus, .contact-form textarea:focus { outline: 1px solid #111; border-color: #111; }
-.contact-form button {
-  font: inherit;
-  font-size: 1rem;
-  padding: 0.7rem 2.2rem;
-  background: #111;
-  color: #fff;
-  border: none;
-  border-radius: 2px;
-  cursor: pointer;
-  align-self: flex-start;
-  letter-spacing: 0.04em;
-}
-.contact-form button:hover { background: #333; }
-.form-thanks {
-  background: #f2f8f2;
-  border: 1px solid #bcd9bc;
-  color: #2c5e2c;
-  padding: 0.8rem 1rem;
-  border-radius: 2px;
-  font-size: 0.95rem;
-}
-
-/* ===== Footer ===== */
-.footer {
-  border-top: 1px solid #eee;
-  text-align: center;
-  padding: 2.5rem 1.4rem 3rem;
+  font-size: 1.1rem;
   color: #777;
-  font-size: 0.85rem;
-}
-.socials { display: flex; justify-content: center; gap: 1.4rem; margin-bottom: 1rem; }
-.socials a { color: #111; }
-.socials a:hover { color: #555; }
-
-/* ===== Каруселька фото (вгорі сторінки) ===== */
-/* Вузьке широке вікно (3:1) обрізає квадратне фото по центру; трек слайдів
-   рухається translateX (композитор). Логіка — app.js → setupHeaderCarousel. */
-.header-carousel { max-width: 1100px; margin: 0 auto 2.2rem; }
-.fc-window {
-  position: relative;
-  overflow: hidden;
-  aspect-ratio: 3 / 1;
-  border-radius: 4px;
-  background: #eee;
-  cursor: grab;
-  touch-action: pan-y;          /* лишає вертикальний скрол сторінки на тачі */
-}
-.fc-window:active { cursor: grabbing; }
-.fc-track {
-  display: flex;
-  height: 100%;
-  transition: transform 0.55s ease;
-  will-change: transform;
-}
-.fc-track.dragging { transition: none; } /* без інерції під час перетягування */
-.fc-slide { flex: 0 0 100%; height: 100%; }
-.fc-slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;            /* квадрат → видно центральну смугу */
-  object-position: center;
-  pointer-events: none;         /* щоб драг не «хапав» саме зображення */
-  user-select: none;
-}
-.fc-dots { display: flex; justify-content: center; gap: 0.5rem; margin: 0.9rem 0 0.4rem; }
-.fc-dot {
-  width: 8px; height: 8px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: #ccc;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
 }
-.fc-dot:hover { background: #999; }
-.fc-dot.active { background: #111; transform: scale(1.25); }
+.modal-close:hover { color: #111; }
 
-/* ===== Lightbox ===== */
+/* ===== Lightbox (фото робіт + відео/PDF) ===== */
 .lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(10,10,10,0.93);
+  background: rgba(10, 10, 10, 0.93);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -440,8 +380,7 @@ section:last-of-type { border-bottom: none; }
 .lightbox[hidden] { display: none; }
 .lightbox img { max-width: 92vw; max-height: 92vh; width: auto; height: auto; }
 /* Глобальне `img { display:block }` перебиває атрибут hidden — повертаємо
-   ховання, інакше порожня картинка лишається у флекс-рядку й зсуває
-   відео/PDF-iframe убік (помітно на вузькому екрані). */
+   ховання, інакше порожня картинка зсуває відео/PDF-iframe убік. */
 .lightbox img[hidden] { display: none; }
 .lightbox-frame { border: 0; cursor: default; }
 .lightbox.lb-video .lightbox-frame {
@@ -466,24 +405,20 @@ section:last-of-type { border-bottom: none; }
 
 /* ===== Responsive ===== */
 @media (max-width: 820px) {
-  section { padding: 3rem 0; }
-  .hero { padding-top: 5.5rem; }
-  .hero-text { margin-bottom: 1.6rem; }
-  /* Portrait: одна колонка — кожна плитка на всю ширину, по одній за раз. */
-  .hero-mosaic { grid-template-columns: 1fr; gap: 1rem; }
-  /* Великі плитки в портреті — теж звичайний квадрат на всю ширину. */
-  .project-tile.feature { grid-column: 1 / -1; grid-row: auto; }
-  .project-tile.feature .tile-title { font-size: clamp(1.3rem, 6vw, 1.9rem); }
-  /* Меню розділів — на всю ширину екрана (як блок у портретці).
-     width:100vw + right:-1.4rem (padding топбару) → від краю до краю. */
+  .topbar, .bottombar { padding: 0.65rem 1rem; font-size: 0.78rem; gap: 0.5rem; }
+  .zapysky-link { font-size: 0.72rem; max-width: 46vw; }
+  main { padding: 4.6rem 1rem 5.6rem; }
+  .fc-window { width: min(100%, calc(100svh - 260px)); }
+  /* Дропдаун — на всю ширину екрана. */
   .nav-dropdown {
     width: 100vw;
-    right: -1.4rem;
+    right: -1rem;
     min-width: 0;
-    border-radius: 0;
     border-left: none;
     border-right: none;
   }
+  .nav-item { text-align: center; }
+  .page-panel, .zapysky-panel { padding: 4.2rem 1rem 5.4rem; }
   .split, .split.reverse { grid-template-columns: 1fr; gap: 1.5rem; }
   .split.reverse .work-text { order: 1; }
   .split.reverse figure { order: 2; }
@@ -492,10 +427,15 @@ section:last-of-type { border-bottom: none; }
   .grid-2 { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
   .grid-4 { column-count: 1; max-width: 480px; margin-left: auto; margin-right: auto; }
   .grid-sketches { grid-template-columns: repeat(3, 1fr); }
-  .contact-inner { grid-template-columns: 1fr; }
-  .project-panel { padding: 0.5rem 1.2rem 1.5rem; }
-  .project-overlay { padding: 3.2rem 0.5rem; }
+  .contact-card { padding: 2rem 1.4rem; }
 }
 @media (max-width: 480px) {
   .grid-sketches { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Поважаємо reduced-motion: шторки/перефарбування без анімації. */
+@media (prefers-reduced-motion: reduce) {
+  body, .topbar, .bottombar, .page-panel, .zapysky-panel, .fc-track, .nav-dropdown {
+    transition: none;
+  }
 }

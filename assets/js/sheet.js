@@ -23,7 +23,7 @@ const csvUrl = (id, gid) =>
  * Головна функція. Вантажить і збирає контент; null → лишається дефолт.
  */
 export async function loadContentFromSheet() {
-  if (!SHEET_ID) return null; // таблиця не налаштована
+  if (!SHEET_ID || SHEET_GID === '') return null; // таблиця не налаштована
   try {
     const res = await fetch(csvUrl(SHEET_ID, SHEET_GID), { cache: 'no-store' });
     if (!res.ok) return null;

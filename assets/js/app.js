@@ -4,15 +4,20 @@
  * Розподіл відповідальності:
  *   content.js — ЩО показувати (дані)
  *   render.js  — ЯК це виглядає (дані → HTML)
- *   app.js     — КОЛИ і що відбувається (стан, події, лайтбокс)
+ *   app.js     — КОЛИ і що відбувається (стан, події, панелі, лайтбокс)
  *
  * Усі обробники повішені на document через делегування, тому вони
  * переживають повний ререндер сторінки (перемикання мови) — нічого
  * не треба перепідписувати.
+ *
+ * НАВІГАЦІЯ (усе через hash → працюють «назад» браузера й прямі лінки):
+ *   #p/<slug>  — інлайн-сторінка (about → artist-statement, проєкти)
+ *   #zapysky   — темний рідер «Записки злочинів проти тварин»
+ *   (порожньо) — головна (слайдер)
  */
 
 import { content as defaultContent } from './content.js';
-import { renderPage, renderProjectHTML, t } from './render.js';
+import { renderPage, renderProjectHTML, renderZapyskyHTML, t } from './render.js';
 import { loadContentFromSheet } from './sheet.js';
 
 const app = document.getElementById('app');
@@ -41,58 +46,21 @@ function render() {
   document.documentElement.lang = lang;
   document.title = t(activeContent.meta.title, lang);
 
-  // FormSubmit повертає користувача на ?sent=1 — показуємо подяку.
-  if (new URLSearchParams(location.search).get('sent') === '1') {
-    document.getElementById('form-thanks').hidden = false;
-  }
+  // Ререндер (зміна мови, підміна контентом із таблиці) створює порожні
+  // панелі — приводимо їх у відповідність до адреси (миттєво, без анімації
+  // повторного «відкриття» — клас .open ставиться заново одразу).
+  syncFromHash();
 
-  // Ререндер (зміна мови, підміна контентом із таблиці) створює порожній
-  // оверлей — якщо в адресі відкритий проєкт, наповнюємо його заново.
-  syncProjectFromHash();
-
-  // Плитки hero перестворюються при кожному ререндері — перепідключаємо
-  // скрол-спостерігач до нових елементів.
-  setupTileReveal();
-
-  // Каруселька фото теж перестворюється — перезапускаємо її логіку.
+  // Слайдер перестворюється при кожному ререндері — перезапускаємо логіку.
   setupHeaderCarousel();
 }
 
-/* ── Реакція плиток на скрол (тач-пристрої без hover) ─────────── */
+/* ── Слайдер фото на головній ─────────────────────────────────── */
 
 /**
- * На десктопі затемнення+назву плитки показує :hover (CSS). На телефоні
- * hover немає, тому плитку, що потрапляє у вузьку смугу по центру екрана,
- * підсвічуємо класом .revealed через IntersectionObserver — так текст
- * з'являється саме на тій плитці, повз яку скролиш/яку торкаєшся.
- *
- * Перф: спостерігач спрацьовує лише на перетині межі (не щокадру), тому
- * скрол лишається дешевим. Старий спостерігач від'єднуємо перед створенням
- * нового — жодних витоків при ререндерах.
- */
-let tileObserver = null;
-function setupTileReveal() {
-  if (tileObserver) { tileObserver.disconnect(); tileObserver = null; }
-  // Тільки там, де немає наведення (телефони/планшети).
-  if (!window.matchMedia || !window.matchMedia('(hover: none)').matches) return;
-  if (!('IntersectionObserver' in window)) return;
-  const tiles = app.querySelectorAll('.project-tile');
-  if (!tiles.length) return;
-  tileObserver = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) e.target.classList.toggle('revealed', e.isIntersecting);
-    },
-    { rootMargin: '-35% 0px -35% 0px' }, // «активна» лише смуга ~30% по центру
-  );
-  tiles.forEach((tile) => tileObserver.observe(tile));
-}
-
-/* ── Каруселька фото (вгорі сторінки) ─────────────────────────── */
-
-/**
- * Горизонтальна каруселька: авто-слайд по таймеру + клікабельні крапки +
+ * Квадратний слайдер: авто-гортання по таймеру + клікабельні крапки +
  * драг/свайп (миша й тач). Перф: слайд — CSS transform (композитор),
- * один setInterval; таймер стоїть, коли каруселька поза екраном
+ * один setInterval; таймер стоїть, коли слайдер поза екраном
  * (IntersectionObserver) чи вкладка прихована, і вимкнений при
  * prefers-reduced-motion. Старий таймер і спостерігач знімаємо перед новим
  * налаштуванням — без витоків при ререндері. (Слухачі pointer/click висять
@@ -152,7 +120,7 @@ function setupHeaderCarousel() {
   win.addEventListener('pointerup', endDrag);
   win.addEventListener('pointercancel', endDrag);
 
-  // Пауза, коли футер не видно
+  // Пауза, коли слайдер не видно (відкрита панель, схований таб)
   if ('IntersectionObserver' in window) {
     fcObserver = new IntersectionObserver((ents) => { inView = ents[0].isIntersecting; }, { threshold: 0.15 });
     fcObserver.observe(win);
@@ -162,35 +130,33 @@ function setupHeaderCarousel() {
   startAuto();
 }
 
-/* ── Оверлей проєкту ─────────────────────────────────────────── */
+/* ── Hash-навігація: інлайн-сторінки і «Записки» ─────────────── */
 
-/**
- * Оверлей повністю керується hash-ом адреси: плитка — це звичайний лінк
- * на #p/<slug>, тож відкриття/закриття, кнопка «назад» браузера і
- * прямі посилання (шеринг) працюють через один механізм — hashchange.
- */
-
-/** Слаг проєкту з поточної адреси або null (location.hash приходить закодованим). */
-function projectSlugFromHash() {
+/** Слаг сторінки з адреси або null (location.hash приходить закодованим). */
+function pageSlugFromHash() {
   const m = location.hash.match(/^#p\/(.+)$/);
   return m ? decodeURIComponent(m[1]) : null;
 }
+const isZapyskyHash = () => location.hash === '#zapysky';
 
-const isProjectOpen = () => !document.getElementById('project-overlay').hidden;
+const pagePanelEl = () => document.getElementById('page-panel');
+const zapyskyPanelEl = () => document.getElementById('zapysky-panel');
+const isPageOpen = () => pagePanelEl().classList.contains('open');
+const isZapyskyOpen = () => zapyskyPanelEl().classList.contains('open');
+const isContactOpen = () => !document.getElementById('contact-modal').hidden;
 const isLightboxOpen = () => !document.getElementById('lightbox').hidden;
 
-/* ── Блокування фону (спільне для оверлея й лайтбокса) ──────────
- * Поки зверху відкритий оверлей чи лайтбокс, фон не скролиться
+/* ── Блокування фону (спільне для панелей/модалки/лайтбокса) ────
+ * Поки зверху відкрита панель, модалка чи лайтбокс, фон не скролиться
  * (overflow:hidden на body). Позицію скролу запам'ятовуємо при
  * блокуванні й повертаємо при розблокуванні: інакше порожній hash
  * при закритті («#» = верх документа) кидає сторінку нагору.
  * Свідомо НЕ використовуємо position:fixed на body — він створив би
- * контейнер для fixed-нащадків і зламав би оверлей/лайтбокс/кнопку ✕. */
+ * контейнер для fixed-нащадків і зламав би панелі та бари. */
 let savedScrollY = 0;
 
-/** Синхронізує блокування фону зі станом накладок (open/close будь-якої). */
 function updateBackgroundLock() {
-  const shouldLock = isProjectOpen() || isLightboxOpen();
+  const shouldLock = isPageOpen() || isZapyskyOpen() || isContactOpen() || isLightboxOpen();
   const isLocked = document.body.style.overflow === 'hidden';
   if (shouldLock && !isLocked) {
     savedScrollY = window.scrollY;
@@ -201,52 +167,82 @@ function updateBackgroundLock() {
   }
 }
 
-/** Приводить оверлей у відповідність до адреси: наповнює й показує або ховає. */
-function syncProjectFromHash() {
-  const overlay = document.getElementById('project-overlay');
-  const panel = overlay.querySelector('.project-panel');
-  const slug = projectSlugFromHash();
-  const html = slug ? renderProjectHTML(slug, lang, activeContent) : null;
-
+/**
+ * Відчиняє/зачиняє панель-шторку. Вміст вставляється перед відкриттям;
+ * після закриття вичищається із затримкою (даємо шторці доїхати, потім
+ * звільняємо DOM і картинки). Анімація — лише transform (композитор).
+ */
+const CLEAR_DELAY = 700; // трохи довше за CSS-transition (0.55s)
+function setPanel(panel, html) {
+  const inner = panel.querySelector('.panel-inner');
   if (html) {
-    panel.innerHTML = html;
-    overlay.hidden = false;
-    overlay.scrollTop = 0;
-  } else {
-    overlay.hidden = true;
-    panel.innerHTML = ''; // звільняє DOM і картинки закритого проєкту
+    inner.innerHTML = html;
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+  } else if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    setTimeout(() => {
+      if (!panel.classList.contains('open')) inner.innerHTML = '';
+    }, CLEAR_DELAY);
   }
+}
+
+/**
+ * Приводить панелі й тему у відповідність до адреси. Єдина точка правди:
+ * викликається на hashchange і після кожного ререндеру.
+ */
+function syncFromHash() {
+  const slug = pageSlugFromHash();
+  const zapysky = isZapyskyHash();
+
+  // Інлайн-сторінка (about / проєкт) — шторка згори.
+  setPanel(pagePanelEl(), slug ? renderProjectHTML(slug, lang, activeContent) : null);
+  if (slug) pagePanelEl().scrollTop = 0;
+
+  // «Записки» — темна шторка знизу + перефарбування сайту в чорне.
+  const zPanel = zapyskyPanelEl();
+  const zHtml = zapysky ? renderZapyskyHTML(lang, activeContent) : null;
+  const wasOpen = isZapyskyOpen();
+  setPanel(zPanel, zHtml);
+  document.documentElement.classList.toggle('dark', !!zHtml);
+  if (zHtml && !wasOpen) {
+    // Старт читання — низ панелі (там 1-а сторінка PDF; гортається вгору).
+    // rAF: чекаємо, поки вставлений вміст отримає розміри (слоти сторінок
+    // мають aspect-ratio, тож висота відома без завантаження картинок).
+    requestAnimationFrame(() => { zPanel.scrollTop = zPanel.scrollHeight; });
+  }
+
   updateBackgroundLock();
 }
 
-/** Закрити оверлей = прибрати слаг з адреси; решту зробить hashchange. */
-function closeProject() {
-  if (projectSlugFromHash() !== null) location.hash = '';
+/** Закрити верхню панель = прибрати hash; решту зробить hashchange. */
+function closeTopPage() {
+  if (pageSlugFromHash() !== null || isZapyskyHash()) location.hash = '';
 }
 
-// Прямі посилання (шеринг) покриває перший render(): він теж викликає
-// syncProjectFromHash(), тож окремого коду для старту не треба.
-window.addEventListener('hashchange', syncProjectFromHash);
+window.addEventListener('hashchange', syncFromHash);
 
-/* ── Лайтбокс («режим кінотеатру») ───────────────────────────── */
+/* ── Маленьке віконце contacts («режим кінотеатру») ──────────── */
 
-/**
- * Відкриває лайтбокс.
- * @param {Object} opts
- * @param {string} [opts.src]     — фото: URL картинки
- * @param {string} [opts.alt]     — фото: alt-текст
- * @param {string} [opts.preview] — відео/PDF: Google Drive /preview URL
- * @param {'video'|'pdf'} [opts.embed] — пропорції вікна для preview
- * @param {string} [opts.title]   — відео/PDF: title для iframe (доступність)
- */
+function openContact() {
+  document.getElementById('contact-modal').hidden = false;
+  updateBackgroundLock();
+}
+function closeContact() {
+  document.getElementById('contact-modal').hidden = true;
+  updateBackgroundLock();
+}
+
+/* ── Лайтбокс (фото робіт + відео/PDF з Drive) ───────────────── */
+
 function openLightbox(opts) {
   const box = document.getElementById('lightbox');
   const img = box.querySelector('img');
   const frame = box.querySelector('.lightbox-frame');
 
   if (opts.preview) {
-    // Drive-плеєр вантажиться лише в момент відкриття — до кліку
-    // сторінка не тягне жодного байта з Google.
+    // Drive/YouTube-плеєр вантажиться лише в момент відкриття.
     frame.src = opts.preview;
     frame.title = opts.title || '';
     frame.hidden = false;
@@ -260,7 +256,7 @@ function openLightbox(opts) {
   }
 
   box.hidden = false;
-  updateBackgroundLock(); // блокуємо скрол фону під лайтбоксом
+  updateBackgroundLock();
 }
 
 function closeLightbox() {
@@ -271,16 +267,14 @@ function closeLightbox() {
   box.hidden = true;
   img.src = '';
   img.hidden = false;
-  frame.src = ''; // вивантажує Drive-плеєр і зупиняє відтворення
+  frame.src = ''; // вивантажує плеєр і зупиняє відтворення
   frame.hidden = true;
   box.classList.remove('lb-video', 'lb-pdf');
-  // Якщо під лайтбоксом відкритий оверлей проєкту — фон лишається заблокованим.
   updateBackgroundLock();
 }
 
-/* ── Навігаційне меню в шапці ─────────────────────────────────── */
+/* ── Дропдаун «дослідження» ──────────────────────────────────── */
 
-/** Згорнути відкрите меню розділів (якщо є). */
 function closeNav() {
   const menu = document.querySelector('.nav-menu.open');
   if (!menu) return;
@@ -288,26 +282,10 @@ function closeNav() {
   menu.querySelector('.nav-toggle')?.setAttribute('aria-expanded', 'false');
 }
 
-/** Плавно прокрутити до секції за ключем пункту меню. */
-function scrollToSection(key) {
-  let el = null;
-  if (key === 'projects') el = document.querySelector('.mosaic-divider');
-  else if (key === 'series') el = document.querySelector('.hero-mosaic .project-tile[href*="p/series"]');
-  else if (key === 'contact') el = document.getElementById('contact');
-  el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-/** Повернутись на початок сторінки (клік по імені в шапці). */
-function scrollToTop() {
-  savedScrollY = 0;                               // якщо був відкритий оверлей — не вертати вниз
-  if (projectSlugFromHash() !== null) location.hash = '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 /* ── Події (делегування на document) ─────────────────────────── */
 
 document.addEventListener('click', (e) => {
-  // Меню розділів: кнопка-перемикач
+  // «дослідження»: кнопка-перемикач дропдауну
   const navToggle = e.target.closest('.nav-toggle');
   if (navToggle) {
     const menu = navToggle.closest('.nav-menu');
@@ -315,23 +293,29 @@ document.addEventListener('click', (e) => {
     navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     return;
   }
-  // Пункт меню
-  const navItem = e.target.closest('.nav-item');
-  if (navItem) {
-    closeNav();
-    if (navItem.dataset.scroll) { e.preventDefault(); scrollToSection(navItem.dataset.scroll); }
-    // інакше About/Gallery: лишаємо hash-навігацію — відкриє оверлей
-    return;
-  }
+  // Пункт дропдауну — hash-лінк (#p/slug); просто згортаємо меню.
+  if (e.target.closest('.nav-item')) { closeNav(); return; }
   closeNav(); // клік деінде згортає відкрите меню
 
-  // Ім'я в шапці → на початок сторінки
+  // Ім'я в шапці → закрити все, на початок сторінки
   const topName = e.target.closest('.topbar-name');
-  if (topName) { e.preventDefault(); return scrollToTop(); }
+  if (topName) {
+    e.preventDefault();
+    savedScrollY = 0;
+    if (location.hash) location.hash = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
 
-  // Перемикач мови в шапці
+  // Перемикач мови (нижня панель)
   const langBtn = e.target.closest('.lang-toggle button');
   if (langBtn) return setLang(langBtn.dataset.lang);
+
+  // contacts → маленьке віконце
+  if (e.target.closest('.contacts-link')) return openContact();
+  // Закриття віконця: ✕ або клік по затемненому фону (не по карточці)
+  if (e.target.closest('.modal-close')) return closeContact();
+  if (e.target.id === 'contact-modal') return closeContact();
 
   // Клік по роботі в галереї → фото в лайтбоксі (повнорозмірна версія)
   const img = e.target.closest('.grid figure img, .split figure img');
@@ -349,26 +333,20 @@ document.addEventListener('click', (e) => {
   }
 
   // Клік по фону лайтбокса або по ✕ → закрити.
-  // (Кліки всередині iframe сюди не долітають — це нормально,
-  //  для відео/PDF закриття працює через ✕ і Esc.)
   if (e.target.closest('#lightbox')) return closeLightbox();
-
-  // Оверлей проєкту: ✕ або клік по затемненому фону (не по панелі) → закрити.
-  if (e.target.closest('.project-close')) return closeProject();
-  if (e.target.id === 'project-overlay') closeProject();
 });
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  // Спершу закривається те, що зверху: лайтбокс, потім оверлей проєкту.
-  if (!document.getElementById('lightbox').hidden) return closeLightbox();
-  if (isProjectOpen()) closeProject();
+  // Закривається те, що зверху: лайтбокс → віконце → панель/«Записки».
+  if (isLightboxOpen()) return closeLightbox();
+  if (isContactOpen()) return closeContact();
+  if (isPageOpen() || isZapyskyOpen()) closeTopPage();
 });
 
 /* ── Старт ────────────────────────────────────────────────────
  * Запускаємо в самому кінці — після всіх оголошень (const/let),
- * щоб перший render() уже бачив усі функції й змінні (інакше
- * updateBackgroundLock звернувся б до них у temporal dead zone). */
+ * щоб перший render() уже бачив усі функції й змінні. */
 
 // 1) Малюємо дефолт одразу — сторінка з'являється миттєво.
 render();

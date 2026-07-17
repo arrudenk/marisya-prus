@@ -69,28 +69,24 @@ export const content = {
     telegram: 'https://t.me/+380686767422',
     city: { uk: 'м. Київ, Україна', en: 'Kyiv, Ukraine' },
     instagram: 'https://www.instagram.com/marisya_prus/',
-    // Фото у каруселі вгорі сторінки (слайд-шоу з крапками). Додати фото =
-    // покласти квадратний jpg у assets/img/ і дописати шлях. Порожньо → каруселі немає.
-    headerPhotos: ['assets/img/header1.jpg', 'assets/img/header2.jpg'],
+    // Фото у квадратному слайдері на головній (авто-гортання + крапки).
+    // Додати фото = покласти jpg у assets/img/ і дописати шлях.
+    headerPhotos: ['assets/img/header1.jpg', 'assets/img/header2.jpg', 'assets/img/hero.jpg'],
   },
 
-  /** Налаштування контактної форми (FormSubmit.co). */
-  form: {
-    action: 'https://formsubmit.co/Prus.mmm22@gmail.com',
-    subject: 'Повідомлення з сайту-портфоліо',
-    // Куди FormSubmit поверне користувача після відправки.
-    // ?sent=1 вмикає банер «Дякуємо» (див. app.js).
-    next: 'https://marisyaprus.com/?sent=1#contact',
-    labels: {
-      name: { uk: 'Ім’я', en: 'Name' },
-      email: { uk: 'Email', en: 'Email' },
-      message: { uk: 'Повідомлення', en: 'Message' },
-      send: { uk: 'Надіслати', en: 'Send' },
-      thanks: {
-        uk: 'Дякуємо! Повідомлення надіслано.',
-        en: 'Thank you! Your message has been sent.',
-      },
+  /**
+   * «Записки злочинів проти тварин» — темний рідер (кнопка в центрі
+   * нижньої панелі). Сторінки — картинки, конвертовані з PDF
+   * (pdftoppm … → assets/img/zapysky/p-NN.jpg). На сайті викладаються
+   * у зворотному порядку: 1-а сторінка внизу, гортається знизу вгору.
+   */
+  zapysky: {
+    title: {
+      uk: 'Записки злочинів проти тварин',
+      en: 'Notes on Crimes Against Animals',
     },
+    pages: Array.from({ length: 53 }, (_, i) =>
+      `assets/img/zapysky/p-${String(i + 1).padStart(2, '0')}.jpg`),
   },
 
   /** Секції сторінки — рендеряться згори вниз у цьому ж порядку. */

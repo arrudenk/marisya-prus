@@ -8,11 +8,16 @@
  * самий рендер працює і для вбудованого дефолту (content.js), і для контенту,
  * завантаженого з Google-таблиці. За замовчуванням береться дефолт.
  *
+ * КАРКАС РЕДИЗАЙНУ:
+ *   ┌ topbar (fixed зверху):  about · ім'я · дослідження(дропдаун проєктів)
+ *   │ main:                   квадратний слайдер фото
+ *   └ bottombar (fixed знизу): укр/en · «Записки…» · contacts
+ * Сторінки (statement/проєкти) відкриваються ІНЛАЙН у .page-panel
+ * (шторка згори вниз); «Записки» — темна .zapysky-panel (шторка знизу
+ * вгору); contacts — маленьке віконце-модалка.
+ *
  * Рендер виконується кілька разів за сесію максимум (старт, підміна з
  * таблиці, зміна мови) — вартість мілісекунди; нічого не крутиться «на льоту».
- *
- * CSS-класи навмисно ті самі, що були в статичній версії, —
- * assets/style.css працює без змін.
  */
 
 import { content } from './content.js';
@@ -25,6 +30,14 @@ import { IMG } from './config.js';
  */
 export const t = (field, lang) =>
   typeof field === 'string' ? field : (field[lang] ?? field.uk);
+
+/** Написи інтерфейсу (не контент — тому тут, а не в content.js). */
+const UI = {
+  about: { uk: 'about', en: 'about' },
+  research: { uk: 'дослідження', en: 'research' },
+  contacts: { uk: 'contacts', en: 'contacts' },
+  close: { uk: 'закрити', en: 'close' },
+};
 
 /**
  * Перетворює значення картинки на реальний URL.
@@ -125,95 +138,69 @@ const workGroup = (group, lang) => `
   </div>
   ${group.caption ? `<div class="grid-cap">${t(group.caption, lang)}</div>` : ''}`;
 
-/* ── Проєкти (секції split/gallery → плитки + оверлей) ───────── */
+/* ── Проєкти (секції split/gallery → список «дослідження») ───── */
 
 /** Рядок → слаг для URL-hash: маленькі літери, все крім літер/цифр → «-». */
 const slugify = (s) =>
   String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
 
 /**
- * Список плиток мозаїки hero. Кожна секція split або gallery = плитка
- * (slug з англійської назви — стабільний для шерингу; обкладинка —
- * section.cover, якщо задана, інакше перше зображення секції). Спереду
- * додаємо велику плитку «Artist Statement» (обкладинка — фото художниці).
+ * Список проєктів із контенту: кожна секція типу split або gallery.
+ * Slug рахується з англійської назви (стабільний для шерингу).
  * Обчислюється при рендері (разова робота), тому працює і для контенту
  * з Google-таблиці без жодних змін у sheet.js.
  */
 export function projectsFrom(data) {
   const seen = new Set();
-  const tiles = data.sections
+  return data.sections
     .filter((s) => s.type === 'split' || s.type === 'gallery')
     .map((s, i) => {
       let slug = slugify(t(s.title, 'en')) || `project-${i + 1}`;
       if (seen.has(slug)) slug = `${slug}-${i + 1}`; // страховка від дублів назв
       seen.add(slug);
-      const cover = s.cover
-        || (s.type === 'split' ? s.image.src : s.groups[0]?.works[0]?.src)
-        || '';
-      return { slug, cover, section: s };
+      return { slug, section: s };
     });
-  // Стейтмент — окрема велика плитка з фото художниці як обкладинкою.
-  const statement = data.sections.find((s) => s.type === 'statement');
-  if (statement) {
-    tiles.unshift({ slug: 'artist-statement', cover: data.artist.photo, section: statement });
-  }
-  return tiles;
 }
 
-/** Великі плитки (2×2): «Artist Statement» і «Artworks». Впізнаємо за slug
- *  (стабільний і для контенту з таблиці: назва «Artworks» → slug `artworks`). */
-const isFeature = (p) => p.slug === 'artist-statement' || p.slug === 'artworks';
-
-/** Одна плитка: фото + затемнення + назва (взаємодія показує обидва). */
-const tileHTML = (p, lang) => `
-      <a class="project-tile${isFeature(p) ? ' feature' : ''}" href="#p/${encodeURIComponent(p.slug)}">
-        <img src="${imageUrl(p.cover, { width: isFeature(p) ? IMG.full : IMG.grid })}" alt="" loading="lazy">
-        <span class="tile-shade"></span>
-        <span class="tile-title">${t(p.section.title, lang)}</span>
-      </a>`;
-
 /**
- * Вміст мозаїки hero. Проходимо секції В ЇХ ПОРЯДКУ (таблиця = сайт:
- * додаси/переставиш секцію — плитка з'явиться саме там). Секція `divider`
- * малюється як роздільник-напис на всю ширину (напр. «Проєкти») — це
- * звичайний рядок у таблиці, тож його видно й ним керуєш там. Решта
- * (statement/split/gallery) — квадратні плитки; contact тощо пропускаємо.
- */
-const heroMosaic = (lang, data) => {
-  const bySection = new Map(projectsFrom(data).map((p) => [p.section, p]));
-  return data.sections
-    .map((s) => {
-      if (s.type === 'divider') {
-        return `<div class="mosaic-divider"><span>${t(s.title, lang)}</span></div>`;
-      }
-      const p = bySection.get(s);
-      return p ? tileHTML(p, lang) : '';
-    })
-    .filter(Boolean)
-    .join('\n');
-};
-
-/**
- * HTML вмісту одного проєкту для оверлея. Використовує ті самі рендерери
- * секцій, що й раніше рендерили їх на головній, — вигляд усередині
- * оверлея ідентичний, стилі не дублюються.
+ * HTML вмісту інлайн-сторінки за слагом:
+ *  - `artist-statement` → секція-стейтмент (кнопка «about»);
+ *  - інакше — проєкт зі списку «дослідження».
+ * null → невідомий слаг (панель не відкриється).
  */
 export function renderProjectHTML(slug, lang, data = content) {
+  if (slug === 'artist-statement') {
+    const s = data.sections.find((x) => x.type === 'statement');
+    return s ? sectionRenderers.statement(s, lang, data) : null;
+  }
   const p = projectsFrom(data).find((x) => x.slug === slug);
   if (!p) return null;
   return sectionRenderers[p.section.type](p.section, lang, data);
 }
 
+/* ── «Записки злочинів проти тварин» (темний рідер) ──────────── */
+
 /**
- * Оверлей проєкту («режим кінотеатру») — один на сторінку, спершу порожній
- * і прихований. app.js наповнює .project-panel через renderProjectHTML()
- * при відкритті та очищує при закритті (звільняє DOM і картинки).
+ * Сторінки «Записок» у ЗВОРОТНОМУ порядку: остання сторінка PDF зверху,
+ * перша — знизу. app.js при відкритті прокручує панель у самий низ, тож
+ * читач бачить 1-у сторінку й гортає ВГОРУ — порядок читання правильний.
+ * aspect-ratio: 1/1 на слотах (сторінки квадратні) резервує місце до
+ * завантаження — прокрутка в низ точна, layout не стрибає.
  */
-const projectOverlay = () => `
-  <div class="project-overlay" id="project-overlay" hidden>
-    <button class="project-close" aria-label="Close">✕</button>
-    <div class="project-panel"></div>
-  </div>`;
+export function renderZapyskyHTML(lang, data = content) {
+  const z = data.zapysky;
+  if (!z || !z.pages?.length) return null;
+  const pages = [...z.pages].reverse()
+    .map((src, i) => {
+      const n = z.pages.length - i; // справжній номер сторінки (для alt)
+      return `<figure class="zp-page"><img src="${src}" alt="${t(z.title, lang)} — ${n}" loading="lazy"></figure>`;
+    })
+    .join('\n');
+  return `
+    <div class="zp-pages">
+      ${pages}
+    </div>`;
+}
 
 /* ── Секції (диспетчеризація за section.type) ────────────────── */
 
@@ -251,100 +238,14 @@ const sectionRenderers = {
       </div>
       ${s.groups.map((g) => workGroup(g, lang)).join('\n')}
     </section>`,
-
-  /** Контакти: дані художниці + форма FormSubmit. */
-  contact: (s, lang, data) => {
-    const { artist, form } = data;
-    const L = form.labels;
-    return `
-    <section class="contact" id="contact">
-      <h2>${t(s.title, lang)}</h2>
-      <div class="contact-inner">
-        <div class="contact-info">
-          <p class="contact-name">${t(artist.name, lang)}</p>
-          <p><a href="mailto:${artist.email}">${artist.email}</a></p>
-          <p><a href="${artist.telegram}" target="_blank" rel="noopener">${artist.phoneLabel}</a></p>
-          <p>${t(artist.city, lang)}</p>
-        </div>
-        <form class="contact-form" action="${form.action}" method="POST">
-          <input type="hidden" name="_subject" value="${form.subject}">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="hidden" name="_next" value="${form.next}">
-          <div id="form-thanks" class="form-thanks" hidden>${t(L.thanks, lang)}</div>
-          <label><span>${t(L.name, lang)}</span><input type="text" name="name" required></label>
-          <label><span>${t(L.email, lang)}</span><input type="email" name="email" required></label>
-          <label><span>${t(L.message, lang)}</span><textarea name="message" rows="5" required></textarea></label>
-          <button type="submit">${t(L.send, lang)}</button>
-        </form>
-      </div>
-    </section>`;
-  },
 };
 
-/* ── Каркас сторінки ─────────────────────────────────────────── */
+/* ── Каркас: topbar / слайдер / bottombar / панелі ───────────── */
 
 /**
- * Пункти навігаційного меню (праворуч у шапці). About і Gallery відкривають
- * оверлей (hash #p/<slug>); Projects/Series/Contacts прокручують сторінку до
- * потрібного місця (data-scroll → обробляється в app.js). Жирні (strong) —
- * About, Gallery, Contacts.
- */
-const navItems = [
-  { label: 'About', href: '#p/artist-statement', strong: true },
-  { label: 'Gallery', href: '#p/artworks', strong: true },
-  { label: 'Projects', scroll: 'projects' },
-  { label: 'Series', scroll: 'series' },
-  { label: 'Contacts', scroll: 'contact', strong: true },
-];
-
-const navMenu = (lang) => `
-    <nav class="nav-menu">
-      <button class="nav-toggle" aria-haspopup="true" aria-expanded="false" aria-label="${t({ uk: 'Розділи', en: 'Sections' }, lang)}">☰</button>
-      <div class="nav-dropdown">
-        <div class="nav-dropdown-inner">
-          ${navItems.map((i) => `<a class="nav-item${i.strong ? ' nav-strong' : ''}" href="${i.href || '#top'}"${i.scroll ? ` data-scroll="${i.scroll}"` : ''}>${i.label}</a>`).join('\n          ')}
-        </div>
-      </div>
-    </nav>`;
-
-const header = (lang, data) => `
-  <header class="topbar">
-    <div class="lang-toggle" role="group" aria-label="Мова / Language">
-      <button data-lang="uk" class="${lang === 'uk' ? 'active' : ''}" aria-label="Українська">УКР</button>
-      <span>/</span>
-      <button data-lang="en" class="${lang === 'en' ? 'active' : ''}" aria-label="English">EN</button>
-    </div>
-    <a href="#top" class="topbar-name">${t(data.artist.name, lang)}</a>
-    ${navMenu(lang)}
-  </header>`;
-
-/**
- * Каруселька фото художниці вгорі сторінки: вузьке широке вікно (обрізає
- * квадрат по центру), фото слайдяться вбік; клікабельні крапки знизу.
- * Логіка (авто-слайд, драг/свайп) — у app.js → setupHeaderCarousel().
- * Рендериться тільки якщо задано artist.headerPhotos.
- */
-const headerCarousel = (photos) => {
-  if (!photos || !photos.length) return '';
-  const slides = photos
-    .map((src) => `<div class="fc-slide"><img src="${imageUrl(src, { width: IMG.full })}" alt="" loading="lazy"></div>`)
-    .join('');
-  const dots = photos
-    .map((_, i) => `<button class="fc-dot${i === 0 ? ' active' : ''}" data-go="${i}" aria-label="${i + 1}"></button>`)
-    .join('');
-  return `
-    <div class="header-carousel">
-      <div class="fc-window">
-        <div class="fc-track">${slides}</div>
-      </div>
-      <div class="fc-dots">${dots}</div>
-    </div>`;
-};
-
-/**
- * Фото для каруселі: з секції типу `header` у таблиці (рядки work →
- * колонка «Зображення»), а якщо такої секції нема — з artist.headerPhotos
- * (резерв content.js). Так фото хедера можна міняти прямо в Google-таблиці.
+ * Фото для слайдера головної: з секції типу `header` у таблиці (рядки
+ * work → колонка «Зображення»), а якщо такої секції нема — з
+ * artist.headerPhotos (резерв content.js).
  */
 const headerPhotosFrom = (data) => {
   const sec = data.sections?.find((s) => s.type === 'header');
@@ -353,32 +254,98 @@ const headerPhotosFrom = (data) => {
 };
 
 /**
- * Hero: зверху каруселька фото художниці, під нею мозаїка плиток — дві великі
- * плитки 2×2 («Artist Statement», «Artworks»), роздільник «Проєкти» і плитки
- * проєктів. Клік по плитці відкриває її вміст в оверлеї.
+ * Квадратний слайдер фото на головній: авто-перемикання + клікабельні
+ * крапки + свайп/драг. Логіка — app.js → setupHeaderCarousel().
  */
-const hero = (lang, data) => `
-  <section class="hero">
-    ${headerCarousel(headerPhotosFrom(data))}
-    <div class="hero-mosaic">
-      ${heroMosaic(lang, data)}
-    </div>
-  </section>`;
+const photoSlider = (photos) => {
+  if (!photos || !photos.length) return '';
+  const slides = photos
+    .map((src) => `<div class="fc-slide"><img src="${imageUrl(src, { width: IMG.full })}" alt="" loading="lazy"></div>`)
+    .join('');
+  const dots = photos
+    .map((_, i) => `<button class="fc-dot${i === 0 ? ' active' : ''}" data-go="${i}" aria-label="${i + 1}"></button>`)
+    .join('');
+  return `
+    <div class="photo-slider">
+      <div class="fc-window">
+        <div class="fc-track">${slides}</div>
+      </div>
+      <div class="fc-dots">${dots}</div>
+    </div>`;
+};
 
-const footer = (lang, data) => `
-  <footer class="footer">
-    <div class="socials">
-      <a href="${data.artist.instagram}" target="_blank" rel="noopener" aria-label="Instagram">
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1" fill="currentColor" stroke="none"/></svg>
-      </a>
+/**
+ * Topbar (fixed зверху, завжди поверх): about · ім'я · «дослідження».
+ * about → інлайн-сторінка стейтменту (#p/artist-statement).
+ * «дослідження» → дропдаун зі списком проєктів (лінки #p/<slug>).
+ */
+const topbar = (lang, data) => `
+  <header class="topbar">
+    <a class="topbar-about" href="#p/artist-statement">${t(UI.about, lang)}</a>
+    <a class="topbar-name" href="#top">${t(data.artist.name, lang)}</a>
+    <nav class="nav-menu">
+      <button class="nav-toggle" aria-haspopup="true" aria-expanded="false">${t(UI.research, lang)}</button>
+      <div class="nav-dropdown">
+        <div class="nav-dropdown-inner">
+          ${projectsFrom(data).map((p) => `<a class="nav-item" href="#p/${encodeURIComponent(p.slug)}">${t(p.section.title, lang)}</a>`).join('\n          ')}
+        </div>
+      </div>
+    </nav>
+  </header>`;
+
+/**
+ * Bottombar (fixed знизу, завжди поверх): укр/en · «Записки…» · contacts.
+ * «Записки» → темний рідер (#zapysky); contacts → маленьке віконце-модалка.
+ */
+const bottombar = (lang, data) => `
+  <footer class="bottombar">
+    <div class="lang-toggle" role="group" aria-label="Мова / Language">
+      <button data-lang="uk" class="${lang === 'uk' ? 'active' : ''}" aria-label="Українська">укр</button>
+      <span>/</span>
+      <button data-lang="en" class="${lang === 'en' ? 'active' : ''}" aria-label="English">en</button>
     </div>
-    <p>© ${new Date().getFullYear()} ${t(data.artist.name, lang)}</p>
+    <a class="zapysky-link" href="#zapysky">${t(data.zapysky?.title ?? '', lang)}</a>
+    <button class="contacts-link">${t(UI.contacts, lang)}</button>
   </footer>`;
 
 /**
+ * Інлайн-панель сторінок (about + проєкти) — шторка, що розгортається
+ * ЗГОРИ ВНИЗ на весь екран між topbar і bottombar. Завжди в DOM,
+ * закрита = зсунута за верхній край (transform, композитор). app.js
+ * наповнює .panel-inner при відкритті та очищує після закриття.
+ */
+const pagePanel = () => `
+  <div class="page-panel" id="page-panel" aria-hidden="true">
+    <div class="panel-inner"></div>
+  </div>`;
+
+/**
+ * Панель «Записок» — темна шторка, що розгортається ЗНИЗУ ВГОРУ.
+ * Вміст (реверсні сторінки PDF) вставляє app.js при відкритті й
+ * прокручує панель у низ (там 1-а сторінка).
+ */
+const zapyskyPanel = () => `
+  <div class="zapysky-panel" id="zapysky-panel" aria-hidden="true">
+    <div class="panel-inner"></div>
+  </div>`;
+
+/**
+ * Маленьке віконце contacts («режим кінотеатру»): затемнений фон,
+ * по центру — карточка лише з поштою (без форми).
+ */
+const contactModal = (lang, data) => `
+  <div class="contact-modal" id="contact-modal" hidden>
+    <div class="contact-card">
+      <button class="modal-close" aria-label="${t(UI.close, lang)}">✕</button>
+      <p class="contact-name">${t(data.artist.name, lang)}</p>
+      <a class="contact-mail" href="mailto:${data.artist.email}">${data.artist.email}</a>
+    </div>
+  </div>`;
+
+/**
  * Лайтбокс — один на всю сторінку, спершу прихований.
- * <img> — для фото, <iframe> — для відео / PDF з Google Drive.
- * Обидва порожні, поки лайтбокс закритий, тому нічого не вантажать.
+ * <img> — для фото (клік по роботі в проєкті), <iframe> — для відео / PDF
+ * з Google Drive. Обидва порожні, поки лайтбокс закритий.
  */
 const lightbox = () => `
   <div class="lightbox" id="lightbox" hidden>
@@ -392,20 +359,14 @@ const lightbox = () => `
  * app.js викликає її при старті, після завантаження таблиці й при зміні мови.
  */
 export function renderPage(lang, data = content) {
-  // На головній інлайном лишаються тільки контакти. Стейтмент і проєкти
-  // (split/gallery) не рендеряться тут — вони живуть плитками в мозаїці hero
-  // й відкриваються в оверлеї.
-  const parts = data.sections
-    .filter((s) => s.type === 'contact')
-    .map((s) => sectionRenderers[s.type](s, lang, data));
-
   return `
-    ${header(lang, data)}
+    ${topbar(lang, data)}
     <main id="top">
-      ${hero(lang, data)}
-      ${parts.join('\n')}
+      ${photoSlider(headerPhotosFrom(data))}
     </main>
-    ${footer(lang, data)}
-    ${lightbox()}
-    ${projectOverlay()}`;
+    ${bottombar(lang, data)}
+    ${pagePanel()}
+    ${zapyskyPanel()}
+    ${contactModal(lang, data)}
+    ${lightbox()}`;
 }
