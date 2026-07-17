@@ -27,8 +27,8 @@ figcaption {
 .topbar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* мова | ім'я (центр) | меню */
   align-items: center;
   padding: 0.7rem 1.4rem;
   background: rgba(255,255,255,0.92);
@@ -36,13 +36,17 @@ figcaption {
   border-bottom: 1px solid #eee;
   z-index: 100;
 }
+.topbar .lang-toggle { justify-self: start; }
 .topbar-name {
+  justify-self: center;
+  text-align: center;
   font-family: 'Bitter', Georgia, serif;
   font-weight: 600;
   text-decoration: none;
   font-size: 1rem;
   letter-spacing: 0.02em;
 }
+.topbar .nav-menu { justify-self: end; }
 .lang-toggle { display: flex; align-items: center; gap: 0.35rem; color: #999; font-size: 0.9rem; }
 .lang-toggle button {
   background: none;
@@ -56,6 +60,68 @@ figcaption {
 }
 .lang-toggle button.active { color: #111; font-weight: 500; }
 .lang-toggle button:hover { color: #111; }
+
+/* Меню розділів (випадаюче). */
+.nav-menu { position: relative; }
+.nav-toggle {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: #555;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+}
+.nav-toggle:hover { color: #111; }
+/* Випадає плавно як окремий блок: розгортається за висотою
+   (grid-template-rows 0fr→1fr — плавно до точної висоти вмісту) +
+   проявляється й трохи опускається. grid-template-rows — layout-анімація,
+   але вона коротка (0.3с) і на крихітному піддереві меню, лише при
+   відкритті/закритті — вартість нехтовна, нічого не крутиться постійно. */
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  /* Не вужче за плитку мозаїки: у 4-колонковій сітці плитка ≈ 25vw − проміжки.
+     clamp тримає розумні межі на дуже вузьких/широких екранах. */
+  min-width: clamp(220px, calc(25vw - 1.6rem), 340px);
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.13);
+  z-index: 120;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: grid-template-rows 0.3s ease, opacity 0.24s ease, transform 0.3s ease;
+}
+.nav-dropdown-inner { overflow: hidden; padding: 0.4rem 0; }
+.nav-menu.open .nav-dropdown {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.nav-item {
+  display: block;
+  padding: 0.55rem 1.15rem;
+  color: #555;
+  text-decoration: none;
+  /* Моноспейс (системний — без окремого завантаження шрифта), по центру. */
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  white-space: nowrap;
+}
+.nav-item:hover { background: #f4f4f4; color: #111; }
+.nav-item.nav-strong { font-weight: 700; color: #111; }
+
+/* Відступ під фіксовану шапку при прокрутці до секції. */
+.mosaic-divider, .hero-mosaic .project-tile, .contact { scroll-margin-top: 72px; }
 
 /* ===== Layout ===== */
 main { max-width: 1100px; margin: 0 auto; padding: 0 1.4rem; }
@@ -77,26 +143,34 @@ section:last-of-type { border-bottom: none; }
 .hero h1 { font-size: clamp(2.4rem, 6vw, 4rem); margin: 0.4rem 0 0.8rem; font-weight: 400; }
 .hero-sub { color: #666; letter-spacing: 0.04em; }
 
-/* Мозаїка: landscape — 4 колонки, фото 2×2, разом із 8 плитками виходить
-   рівний прямокутник 4×3. Висоту рядів задають квадратні плитки
-   (aspect-ratio), фото просто розтягується на свої клітинки (object-fit). */
+/* Мозаїка: landscape — 4 колонки. Зверху дві великі плитки 2×2 (Artist
+   Statement + Artworks) — вони заповнюють перші два ряди; далі роздільник
+   «Проєкти» на всю ширину; під ним плитки проєктів (1×1). Висоту рядів
+   задають квадратні плитки (aspect-ratio). */
 .hero-mosaic {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-flow: dense;
   gap: 1.2rem;
 }
-.mosaic-photo {
-  /* Фото праворуч зверху (колонки 3–4), плитки заповнюють решту (dense). */
-  grid-column: 3 / span 2;
-  grid-row: 1 / span 2;
-  overflow: hidden;
-  background: #eee;
+/* Роздільник між великими плитками й проєктами — на всю ширину сітки. */
+.mosaic-divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.6rem 0 0;
+  font-family: 'Bitter', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #333;
 }
-.mosaic-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.mosaic-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #ddd;
 }
 
 /* ===== Statement ===== */
@@ -131,6 +205,20 @@ section:last-of-type { border-bottom: none; }
 .grid-sketches { grid-template-columns: repeat(5, 1fr); gap: 1rem; }
 .grid figure img { width: 100%; }
 .grid-cap { display: block; margin-top: 1rem; }
+/* Ціна в правому нижньому кутку картини (накладка поверх зображення). */
+.work-media { position: relative; display: block; }
+.work-price {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 0.22rem 0.5rem;
+  border-radius: 2px;
+  pointer-events: none;
+}
 .sub-title {
   text-align: center;
   margin: 3.5rem 0 0;
@@ -160,16 +248,23 @@ section:last-of-type { border-bottom: none; }
   text-decoration: none;
   background: #eee;
 }
+/* Велика плитка «Artworks» — займає 2×2 клітинки. Разом із фото 2×2
+   і 8 звичайними плитками мозаїка складається в рівний прямокутник 4×4. */
+.project-tile.feature { grid-column: span 2; grid-row: span 2; }
+.project-tile.feature .tile-title { font-size: clamp(1.3rem, 2.4vw, 1.9rem); }
 .project-tile img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
+/* За замовчуванням плитка — чисте фото: затемнення й назва приховані
+   (opacity 0). З'являються при взаємодії (див. нижче). */
 .tile-shade {
   position: absolute;
   inset: 0;
   background: rgba(12, 12, 12, 0.55);
+  opacity: 0;
   transition: opacity 0.35s ease;
 }
 .tile-title {
@@ -185,13 +280,21 @@ section:last-of-type { border-bottom: none; }
   font-weight: 600;
   font-size: clamp(1rem, 1.6vw, 1.25rem);
   line-height: 1.35;
+  opacity: 0;
   transition: opacity 0.35s ease;
 }
+/* Показуємо затемнення+назву: наведення/фокус/затискання (десктоп і тач),
+   а також клас .revealed — його на тачі вішає скрол-спостерігач в app.js. */
 .project-tile:hover .tile-shade,
 .project-tile:hover .tile-title,
 .project-tile:focus-visible .tile-shade,
-.project-tile:focus-visible .tile-title { opacity: 0; }
-.project-tile:hover img { transform: scale(1.04); }
+.project-tile:focus-visible .tile-title,
+.project-tile:active .tile-shade,
+.project-tile:active .tile-title,
+.project-tile.revealed .tile-shade,
+.project-tile.revealed .tile-title { opacity: 1; }
+.project-tile:hover img,
+.project-tile:active img { transform: scale(1.04); }
 
 /* ===== Project overlay («режим кінотеатру») ===== */
 /* Затемнений фон на весь екран (над topbar, під лайтбоксом),
@@ -323,16 +426,21 @@ section:last-of-type { border-bottom: none; }
   section { padding: 3rem 0; }
   .hero { padding-top: 5.5rem; }
   .hero-text { margin-bottom: 1.6rem; }
-  /* Portrait: 2 колонки, фото стає вертикальним (1×2), плитки — навколо
-     (dense заповнює клітинки без дірок). */
-  .hero-mosaic { grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
-  /* hero.jpg майже горизонтальне (1.22:1) — у вузьку клітинку 1×2 воно
-     влазило лише обрізаним. У портреті фото йде на всю ширину зі своїми
-     природними пропорціями (height:auto замість cover) — без обрізання. */
-  .mosaic-photo { grid-column: 1 / -1; grid-row: auto; }
-  .mosaic-photo img { height: auto; }
-  /* Довгі назви мають вміщатись у менший квадрат */
-  .tile-title { font-size: 0.85rem; padding: 0.7rem; }
+  /* Portrait: одна колонка — кожна плитка на всю ширину, по одній за раз. */
+  .hero-mosaic { grid-template-columns: 1fr; gap: 1rem; }
+  /* Великі плитки в портреті — теж звичайний квадрат на всю ширину. */
+  .project-tile.feature { grid-column: 1 / -1; grid-row: auto; }
+  .project-tile.feature .tile-title { font-size: clamp(1.3rem, 6vw, 1.9rem); }
+  /* Меню розділів — на всю ширину екрана (як блок у портретці).
+     width:100vw + right:-1.4rem (padding топбару) → від краю до краю. */
+  .nav-dropdown {
+    width: 100vw;
+    right: -1.4rem;
+    min-width: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
   .split, .split.reverse { grid-template-columns: 1fr; gap: 1.5rem; }
   .split.reverse .work-text { order: 1; }
   .split.reverse figure { order: 2; }

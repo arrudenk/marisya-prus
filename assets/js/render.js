@@ -91,12 +91,30 @@ const imgTag = (value, alt, extra = '') => {
   return `<img src="${src}" data-full="${full}" alt="${alt || ''}" loading="lazy"${extra}>`;
 };
 
-/** Одна робота в сітці: картинка + (опційно) підпис у два рядки. */
+/** Напис-заглушка «в наявності» (числовий 0 → «в наявності / in stock»). */
+const PRICE_IN_STOCK = { uk: 'в наявності', en: 'in stock' };
+
+/**
+ * Ціна в кутку роботи. Значення береться з work.price (клітинка «Ціна» в
+ * таблиці). Порожнє → нічого. Числовий 0 → «в наявності / in stock».
+ * Будь-що інше показуємо як є (напр. «€500», «12 000 грн»).
+ */
+const priceTag = (work, lang) => {
+  const raw = work.price;
+  if (raw == null || String(raw).trim() === '') return '';
+  const s = String(raw).trim();
+  const digits = s.replace(/\D/g, '');                  // лише цифри
+  const isZero = digits !== '' && Number(digits) === 0; // «0», «0.00», «0 грн»
+  const text = isZero ? t(PRICE_IN_STOCK, lang) : s;    // інакше — як є
+  return `<span class="work-price">${text}</span>`;
+};
+
+/** Одна робота в сітці: картинка (+ ціна в кутку) + (опційно) підпис. */
 const workFigure = (work, lang) => {
   const caption = work.title
     ? `<figcaption><span>${t(work.title, lang)}</span><br><span>${t(work.materials, lang)}</span></figcaption>`
     : '';
-  return `<figure>${imgTag(work.src, work.alt)}${caption}</figure>`;
+  return `<figure><span class="work-media">${imgTag(work.src, work.alt)}${priceTag(work, lang)}</span>${caption}</figure>`;
 };
 
 /** Група робіт: (опційно) підзаголовок + сітка + (опційно) підпис під сіткою. */
@@ -114,15 +132,16 @@ const slugify = (s) =>
   String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
 
 /**
- * Список проєктів із контенту. Проєкт = кожна секція типу split або gallery.
- * Для кожної рахуємо slug (з англійської назви — стабільний для шерингу)
- * і обкладинку: section.cover, якщо задана, інакше перше зображення секції.
+ * Список плиток мозаїки hero. Кожна секція split або gallery = плитка
+ * (slug з англійської назви — стабільний для шерингу; обкладинка —
+ * section.cover, якщо задана, інакше перше зображення секції). Спереду
+ * додаємо велику плитку «Artist Statement» (обкладинка — фото художниці).
  * Обчислюється при рендері (разова робота), тому працює і для контенту
  * з Google-таблиці без жодних змін у sheet.js.
  */
 export function projectsFrom(data) {
   const seen = new Set();
-  return data.sections
+  const tiles = data.sections
     .filter((s) => s.type === 'split' || s.type === 'gallery')
     .map((s, i) => {
       let slug = slugify(t(s.title, 'en')) || `project-${i + 1}`;
@@ -133,17 +152,46 @@ export function projectsFrom(data) {
         || '';
       return { slug, cover, section: s };
     });
+  // Стейтмент — окрема велика плитка з фото художниці як обкладинкою.
+  const statement = data.sections.find((s) => s.type === 'statement');
+  if (statement) {
+    tiles.unshift({ slug: 'artist-statement', cover: data.artist.photo, section: statement });
+  }
+  return tiles;
 }
 
-/** Квадратні плитки проєктів: фото + затемнення + назва (hover знімає обидва).
- *  Вставляються в мозаїку hero поруч із фото художниці. */
-const projectTiles = (lang, data) =>
-  projectsFrom(data).map((p) => `
-      <a class="project-tile" href="#p/${encodeURIComponent(p.slug)}">
-        <img src="${imageUrl(p.cover, { width: IMG.grid })}" alt="" loading="lazy">
+/** Великі плитки (2×2): «Artist Statement» і «Artworks». Впізнаємо за slug
+ *  (стабільний і для контенту з таблиці: назва «Artworks» → slug `artworks`). */
+const isFeature = (p) => p.slug === 'artist-statement' || p.slug === 'artworks';
+
+/** Одна плитка: фото + затемнення + назва (взаємодія показує обидва). */
+const tileHTML = (p, lang) => `
+      <a class="project-tile${isFeature(p) ? ' feature' : ''}" href="#p/${encodeURIComponent(p.slug)}">
+        <img src="${imageUrl(p.cover, { width: isFeature(p) ? IMG.full : IMG.grid })}" alt="" loading="lazy">
         <span class="tile-shade"></span>
         <span class="tile-title">${t(p.section.title, lang)}</span>
-      </a>`).join('\n');
+      </a>`;
+
+/**
+ * Вміст мозаїки hero. Проходимо секції В ЇХ ПОРЯДКУ (таблиця = сайт:
+ * додаси/переставиш секцію — плитка з'явиться саме там). Секція `divider`
+ * малюється як роздільник-напис на всю ширину (напр. «Проєкти») — це
+ * звичайний рядок у таблиці, тож його видно й ним керуєш там. Решта
+ * (statement/split/gallery) — квадратні плитки; contact тощо пропускаємо.
+ */
+const heroMosaic = (lang, data) => {
+  const bySection = new Map(projectsFrom(data).map((p) => [p.section, p]));
+  return data.sections
+    .map((s) => {
+      if (s.type === 'divider') {
+        return `<div class="mosaic-divider"><span>${t(s.title, lang)}</span></div>`;
+      }
+      const p = bySection.get(s);
+      return p ? tileHTML(p, lang) : '';
+    })
+    .filter(Boolean)
+    .join('\n');
+};
 
 /**
  * HTML вмісту одного проєкту для оверлея. Використовує ті самі рендерери
@@ -235,35 +283,53 @@ const sectionRenderers = {
 
 /* ── Каркас сторінки ─────────────────────────────────────────── */
 
+/**
+ * Пункти навігаційного меню (праворуч у шапці). About і Gallery відкривають
+ * оверлей (hash #p/<slug>); Projects/Series/Contacts прокручують сторінку до
+ * потрібного місця (data-scroll → обробляється в app.js). Жирні (strong) —
+ * About, Gallery, Contacts.
+ */
+const navItems = [
+  { label: 'About', href: '#p/artist-statement', strong: true },
+  { label: 'Gallery', href: '#p/artworks', strong: true },
+  { label: 'Projects', scroll: 'projects' },
+  { label: 'Series', scroll: 'series' },
+  { label: 'Contacts', scroll: 'contact', strong: true },
+];
+
+const navMenu = (lang) => `
+    <nav class="nav-menu">
+      <button class="nav-toggle" aria-haspopup="true" aria-expanded="false" aria-label="${t({ uk: 'Розділи', en: 'Sections' }, lang)}">☰</button>
+      <div class="nav-dropdown">
+        <div class="nav-dropdown-inner">
+          ${navItems.map((i) => `<a class="nav-item${i.strong ? ' nav-strong' : ''}" href="${i.href || '#top'}"${i.scroll ? ` data-scroll="${i.scroll}"` : ''}>${i.label}</a>`).join('\n          ')}
+        </div>
+      </div>
+    </nav>`;
+
 const header = (lang, data) => `
   <header class="topbar">
-    <a href="#top" class="topbar-name">${t(data.artist.name, lang)}</a>
     <div class="lang-toggle" role="group" aria-label="Мова / Language">
       <button data-lang="uk" class="${lang === 'uk' ? 'active' : ''}" aria-label="Українська">УКР</button>
       <span>/</span>
       <button data-lang="en" class="${lang === 'en' ? 'active' : ''}" aria-label="English">EN</button>
     </div>
+    <a href="#top" class="topbar-name">${t(data.artist.name, lang)}</a>
+    ${navMenu(lang)}
   </header>`;
 
 /**
- * Hero: ім'я зверху, під ним мозаїка — фото художниці як великий елемент
- * сітки + плитки проєктів навколо. Фокус одразу на проєктах, а фото й ім'я
- * зшиті з ними в одну композицію.
- * Landscape: 4 колонки, фото 2×2 (разом із 8 плитками — рівний прямокутник
- * 4×3). Portrait (див. CSS): 2 колонки, фото вертикальне 1×2.
+ * Hero: ім'я зверху, під ним мозаїка. Спершу дві великі плитки 2×2 —
+ * «Artist Statement» (обкладинка — фото художниці) і «Artworks», — потім
+ * роздільник «Проєкти / Projects», під ним плитки проєктів.
+ * Landscape (див. CSS): 4 колонки (великі плитки 2×2, проєкти 1×1).
+ * Portrait: одна колонка — кожна плитка на всю ширину, по одній за раз.
+ * Клік по будь-якій плитці відкриває її вміст в оверлеї.
  */
 const hero = (lang, data) => `
   <section class="hero">
-    <div class="hero-text">
-      <p class="kicker"><span class="dot">●</span> PORTFOLIO <span class="dot">●</span></p>
-      <h1>${t(data.artist.name, lang)}</h1>
-      <p class="hero-sub">${t(data.artist.tagline, lang)}</p>
-    </div>
     <div class="hero-mosaic">
-      <figure class="mosaic-photo">
-        <img src="${imageUrl(data.artist.photo, { width: IMG.full })}" alt="${t(data.artist.name, lang)}" fetchpriority="high">
-      </figure>
-      ${projectTiles(lang, data)}
+      ${heroMosaic(lang, data)}
     </div>
   </section>`;
 
@@ -294,11 +360,11 @@ const lightbox = () => `
  * app.js викликає її при старті, після завантаження таблиці й при зміні мови.
  */
 export function renderPage(lang, data = content) {
-  // Секції-проєкти (split/gallery) на головній не рендеряться — їхні плитки
-  // живуть у мозаїці hero. Тут лишаються statement (одразу під мозаїкою)
-  // і контакти внизу.
+  // На головній інлайном лишаються тільки контакти. Стейтмент і проєкти
+  // (split/gallery) не рендеряться тут — вони живуть плитками в мозаїці hero
+  // й відкриваються в оверлеї.
   const parts = data.sections
-    .filter((s) => s.type !== 'split' && s.type !== 'gallery')
+    .filter((s) => s.type === 'contact')
     .map((s) => sectionRenderers[s.type](s, lang, data));
 
   return `

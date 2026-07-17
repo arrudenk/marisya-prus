@@ -1,3 +1,3 @@
-# Портфоліо — Marisya Prus
+# Портфоліо — Marysia Prus
 
 Односторінковий сайт-портфоліо: https://marisyaprus.com

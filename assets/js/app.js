@@ -40,7 +40,6 @@ function render() {
   app.innerHTML = renderPage(lang, activeContent);
   document.documentElement.lang = lang;
   document.title = t(activeContent.meta.title, lang);
-  document.body.style.overflow = ''; // на випадок ререндеру з відкритим лайтбоксом
 
   // FormSubmit повертає користувача на ?sent=1 — показуємо подяку.
   if (new URLSearchParams(location.search).get('sent') === '1') {
@@ -50,16 +49,40 @@ function render() {
   // Ререндер (зміна мови, підміна контентом із таблиці) створює порожній
   // оверлей — якщо в адресі відкритий проєкт, наповнюємо його заново.
   syncProjectFromHash();
+
+  // Плитки hero перестворюються при кожному ререндері — перепідключаємо
+  // скрол-спостерігач до нових елементів.
+  setupTileReveal();
 }
 
-// 1) Малюємо дефолт одразу — сторінка з'являється миттєво.
-render();
+/* ── Реакція плиток на скрол (тач-пристрої без hover) ─────────── */
 
-// 2) Пробуємо підтягти контент із Google-таблиці; якщо вдалося —
-//    підміняємо й перемальовуємо один раз. Помилка/відсутність → лишається дефолт.
-loadContentFromSheet().then((fromSheet) => {
-  if (fromSheet) { activeContent = fromSheet; render(); }
-});
+/**
+ * На десктопі затемнення+назву плитки показує :hover (CSS). На телефоні
+ * hover немає, тому плитку, що потрапляє у вузьку смугу по центру екрана,
+ * підсвічуємо класом .revealed через IntersectionObserver — так текст
+ * з'являється саме на тій плитці, повз яку скролиш/яку торкаєшся.
+ *
+ * Перф: спостерігач спрацьовує лише на перетині межі (не щокадру), тому
+ * скрол лишається дешевим. Старий спостерігач від'єднуємо перед створенням
+ * нового — жодних витоків при ререндерах.
+ */
+let tileObserver = null;
+function setupTileReveal() {
+  if (tileObserver) { tileObserver.disconnect(); tileObserver = null; }
+  // Тільки там, де немає наведення (телефони/планшети).
+  if (!window.matchMedia || !window.matchMedia('(hover: none)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+  const tiles = app.querySelectorAll('.project-tile');
+  if (!tiles.length) return;
+  tileObserver = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) e.target.classList.toggle('revealed', e.isIntersecting);
+    },
+    { rootMargin: '-35% 0px -35% 0px' }, // «активна» лише смуга ~30% по центру
+  );
+  tiles.forEach((tile) => tileObserver.observe(tile));
+}
 
 /* ── Оверлей проєкту ─────────────────────────────────────────── */
 
@@ -76,6 +99,29 @@ function projectSlugFromHash() {
 }
 
 const isProjectOpen = () => !document.getElementById('project-overlay').hidden;
+const isLightboxOpen = () => !document.getElementById('lightbox').hidden;
+
+/* ── Блокування фону (спільне для оверлея й лайтбокса) ──────────
+ * Поки зверху відкритий оверлей чи лайтбокс, фон не скролиться
+ * (overflow:hidden на body). Позицію скролу запам'ятовуємо при
+ * блокуванні й повертаємо при розблокуванні: інакше порожній hash
+ * при закритті («#» = верх документа) кидає сторінку нагору.
+ * Свідомо НЕ використовуємо position:fixed на body — він створив би
+ * контейнер для fixed-нащадків і зламав би оверлей/лайтбокс/кнопку ✕. */
+let savedScrollY = 0;
+
+/** Синхронізує блокування фону зі станом накладок (open/close будь-якої). */
+function updateBackgroundLock() {
+  const shouldLock = isProjectOpen() || isLightboxOpen();
+  const isLocked = document.body.style.overflow === 'hidden';
+  if (shouldLock && !isLocked) {
+    savedScrollY = window.scrollY;
+    document.body.style.overflow = 'hidden';
+  } else if (!shouldLock && isLocked) {
+    document.body.style.overflow = '';
+    window.scrollTo(0, savedScrollY); // повертаємось, де були
+  }
+}
 
 /** Приводить оверлей у відповідність до адреси: наповнює й показує або ховає. */
 function syncProjectFromHash() {
@@ -88,12 +134,11 @@ function syncProjectFromHash() {
     panel.innerHTML = html;
     overlay.hidden = false;
     overlay.scrollTop = 0;
-    document.body.style.overflow = 'hidden'; // фон під оверлеєм не скролиться
   } else {
     overlay.hidden = true;
     panel.innerHTML = ''; // звільняє DOM і картинки закритого проєкту
-    document.body.style.overflow = '';
   }
+  updateBackgroundLock();
 }
 
 /** Закрити оверлей = прибрати слаг з адреси; решту зробить hashchange. */
@@ -137,7 +182,7 @@ function openLightbox(opts) {
   }
 
   box.hidden = false;
-  document.body.style.overflow = 'hidden'; // блокуємо скрол під лайтбоксом
+  updateBackgroundLock(); // блокуємо скрол фону під лайтбоксом
 }
 
 function closeLightbox() {
@@ -151,13 +196,61 @@ function closeLightbox() {
   frame.src = ''; // вивантажує Drive-плеєр і зупиняє відтворення
   frame.hidden = true;
   box.classList.remove('lb-video', 'lb-pdf');
-  // Якщо під лайтбоксом відкритий проєкт — скрол фону лишається заблокованим.
-  document.body.style.overflow = isProjectOpen() ? 'hidden' : '';
+  // Якщо під лайтбоксом відкритий оверлей проєкту — фон лишається заблокованим.
+  updateBackgroundLock();
+}
+
+/* ── Навігаційне меню в шапці ─────────────────────────────────── */
+
+/** Згорнути відкрите меню розділів (якщо є). */
+function closeNav() {
+  const menu = document.querySelector('.nav-menu.open');
+  if (!menu) return;
+  menu.classList.remove('open');
+  menu.querySelector('.nav-toggle')?.setAttribute('aria-expanded', 'false');
+}
+
+/** Плавно прокрутити до секції за ключем пункту меню. */
+function scrollToSection(key) {
+  let el = null;
+  if (key === 'projects') el = document.querySelector('.mosaic-divider');
+  else if (key === 'series') el = document.querySelector('.hero-mosaic .project-tile[href*="p/series"]');
+  else if (key === 'contact') el = document.getElementById('contact');
+  el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/** Повернутись на початок сторінки (клік по імені в шапці). */
+function scrollToTop() {
+  savedScrollY = 0;                               // якщо був відкритий оверлей — не вертати вниз
+  if (projectSlugFromHash() !== null) location.hash = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ── Події (делегування на document) ─────────────────────────── */
 
 document.addEventListener('click', (e) => {
+  // Меню розділів: кнопка-перемикач
+  const navToggle = e.target.closest('.nav-toggle');
+  if (navToggle) {
+    const menu = navToggle.closest('.nav-menu');
+    const open = menu.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    return;
+  }
+  // Пункт меню
+  const navItem = e.target.closest('.nav-item');
+  if (navItem) {
+    closeNav();
+    if (navItem.dataset.scroll) { e.preventDefault(); scrollToSection(navItem.dataset.scroll); }
+    // інакше About/Gallery: лишаємо hash-навігацію — відкриє оверлей
+    return;
+  }
+  closeNav(); // клік деінде згортає відкрите меню
+
+  // Ім'я в шапці → на початок сторінки
+  const topName = e.target.closest('.topbar-name');
+  if (topName) { e.preventDefault(); return scrollToTop(); }
+
   // Перемикач мови в шапці
   const langBtn = e.target.closest('.lang-toggle button');
   if (langBtn) return setLang(langBtn.dataset.lang);
@@ -192,4 +285,18 @@ document.addEventListener('keydown', (e) => {
   // Спершу закривається те, що зверху: лайтбокс, потім оверлей проєкту.
   if (!document.getElementById('lightbox').hidden) return closeLightbox();
   if (isProjectOpen()) closeProject();
+});
+
+/* ── Старт ────────────────────────────────────────────────────
+ * Запускаємо в самому кінці — після всіх оголошень (const/let),
+ * щоб перший render() уже бачив усі функції й змінні (інакше
+ * updateBackgroundLock звернувся б до них у temporal dead zone). */
+
+// 1) Малюємо дефолт одразу — сторінка з'являється миттєво.
+render();
+
+// 2) Пробуємо підтягти контент із Google-таблиці; якщо вдалося —
+//    підміняємо й перемальовуємо один раз. Помилка/відсутність → лишається дефолт.
+loadContentFromSheet().then((fromSheet) => {
+  if (fromSheet) { activeContent = fromSheet; render(); }
 });

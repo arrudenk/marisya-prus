@@ -142,6 +142,9 @@ export function buildSections(rows) {
 
       if (kind === 'statement') {
         section = { type: 'statement', title: (title && title.uk) || 'Artist Statement', paragraphs: toParagraphs(o) };
+      } else if (kind === 'divider') {
+        // Роздільник у мозаїці hero (напр. «Проєкти»). Плиток не має.
+        section = { type: 'divider', title: title || { uk: '', en: '' } };
       } else if (kind === 'split' || kind === 'split-reverse') {
         section = {
           type: 'split',
@@ -180,11 +183,15 @@ export function buildSections(rows) {
       if (!section) continue;
       if (!group) group = { grid: 'grid-2', works: [] }; // на випадок роботи без секції-галереї
       const title = bi(o, 'Заголовок (укр)', 'Заголовок (eng)');
+      const price = (o['Ціна'] || '').trim();
       const work = {
         src: (o['Зображення'] || '').trim(),
         alt: (title && title.uk) || '',
         ...(title ? { title } : {}),
         ...(bi(o, 'Матеріали (укр)', 'Матеріали (eng)') ? { materials: bi(o, 'Матеріали (укр)', 'Матеріали (eng)') } : {}),
+        // Ціна: показується в кутку картини. '0' → «в наявності / in stock».
+        // Порожня клітинка → нічого. (Логіка форматування — у render.js.)
+        ...(price ? { price } : {}),
       };
       group.works.push(work);
       continue;

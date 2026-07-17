@@ -16,6 +16,8 @@
  *   alt: string,        — alt-текст для доступності
  *   title?: L,          — назва + рік (перший рядок підпису)
  *   materials?: L,      — техніка й розмір (другий рядок підпису)
+ *   price?: string,     — ціна в кутку картини; '0' → «в наявності / in stock»,
+ *                         порожньо → нічого (напр. '€500', '12 000 грн')
  * }
  * Link     = {
  *   label: L,           — текст лінка
@@ -41,6 +43,9 @@
  *     title: L, paragraphs?: L[], link?: Link,
  *     groups: [{ title?: L, grid: 'grid-1'|'grid-2'|'grid-3'|'grid-4'|'grid-sketches',
  *                works: Work[], caption?: L }] }
+ *   { type: 'divider', title: L } — не плитка, а напис-роздільник на всю
+ *     ширину в мозаїці hero (напр. «Проєкти»); стоїть у масиві там, де має
+ *     з'явитися на сайті.
  *   { type: 'contact' } — рендериться з даних artist + form
  * ────────────────────────────────────────────────────────────────
  */
@@ -50,13 +55,13 @@ export const content = {
   meta: {
     title: {
       uk: 'Прус Марися — портфоліо',
-      en: 'Marisya Prus — portfolio',
+      en: 'Marysia Prus — portfolio',
     },
   },
 
   /** Дані художниці — використовуються в hero, контактах і футері. */
   artist: {
-    name: { uk: 'Прус Марися', en: 'Marisya Prus' },
+    name: { uk: 'Прус Марися', en: 'Marysia Prus' },
     tagline: { uk: 'художниця · Київ, Україна', en: 'artist · Kyiv, Ukraine' },
     photo: 'assets/img/hero.jpg',
     email: 'Prus.mmm22@gmail.com',
@@ -111,6 +116,105 @@ export const content = {
         },
       ],
     },
+
+    /* ── Роботи / Artworks ────────────────────────────────────────
+       Одразу після стейтменту — як і візуально (велика плитка поруч).
+       Окремий блок-плитка: картини підряд (не за проєктами), кожна
+       з власним підписом і ціною в кутку. Порядок — як на сайті: у
+       послідовності проєктів згори вниз (Між іншими → Історії →
+       Графіка → Змія → Стежки). price: '0' → «в наявності / in stock»;
+       щоб показати ціну — заміни на суму (напр. '€500'). Ті самі
+       зображення живуть і в проєктах нижче — тут вони зібрані разом як
+       продажний список. */
+    {
+      type: 'gallery',
+      title: { uk: 'Роботи', en: 'Artworks' },
+      groups: [
+        {
+          grid: 'grid-2',
+          works: [
+            {
+              src: 'assets/img/mizh-aksolotl.jpg', alt: 'Аксолотль', price: '0',
+              title: { uk: '«Аксолотль», 2025', en: '“Axolotl”, 2025' },
+              materials: { uk: 'олія на полотні, нитка · 70×80 см', en: 'oil on canvas, thread · 70×80 cm' },
+            },
+            {
+              src: 'assets/img/mizh-perehuznia.jpg', alt: 'Перегузня', price: '0',
+              title: { uk: '«Перегузня», 2025', en: '“Marbled Polecat”, 2025' },
+              materials: { uk: 'олія на полотні, нитка · 70×80 см', en: 'oil on canvas, thread · 70×80 cm' },
+            },
+            {
+              src: 'assets/img/leleka.jpg', alt: 'Лелека', price: '0',
+              title: { uk: '«Лелека», 2025', en: '“Stork”, 2025' },
+              materials: { uk: 'олія на полотні · 75×150', en: 'oil on canvas · 75×150' },
+            },
+            {
+              src: 'assets/img/nikudy-tikaty.jpg', alt: 'Нікуди тікати', price: '0',
+              title: { uk: '«Нікуди тікати», 2025', en: '“Nowhere to Run”, 2025' },
+              materials: { uk: 'олія на полотні · 75×150', en: 'oil on canvas · 75×150' },
+            },
+            {
+              src: 'assets/img/u-travi-zhyve-vohon.jpg', alt: 'У траві живе вогонь', price: '0',
+              title: { uk: '«У траві живе вогонь», 2025', en: '“Fire Lives in the Grass”, 2025' },
+              materials: { uk: 'олія на полотні · 65×150', en: 'oil on canvas · 65×150' },
+            },
+            {
+              src: 'assets/img/stayni.jpg', alt: 'Стайні — це що, військовий об’єкт?', price: '0',
+              title: { uk: '«Стайні — це що, військовий об’єкт?», 2024', en: '“Stables — a military object, then?”, 2024' },
+              materials: { uk: 'олівець на папері · 20×28 см', en: 'pencil on paper · 20×28 cm' },
+            },
+            {
+              src: 'assets/img/morski-konyky.jpg', alt: 'Морські коники', price: '0',
+              title: { uk: '«Морські коники», 2026', en: '“Seahorses”, 2026' },
+              materials: { uk: 'олівець, папір, калька · 13×29', en: 'pencil, paper, tracing paper · 13×29' },
+            },
+            {
+              src: 'assets/img/nezlamnist.jpg', alt: 'Де закінчується незламність і починається безвідповідальність?', price: '0',
+              title: { uk: '«Де закінчується незламність і починається безвідповідальність?», 2026', en: '“Where does resilience end and irresponsibility begin?”, 2026' },
+              materials: { uk: 'олівець, папір · 21×29', en: 'pencil, paper · 21×29' },
+            },
+            {
+              src: 'assets/img/lis-zghoriv.jpg', alt: 'Ліс згорів, доля тварин невідома', price: '0',
+              title: { uk: '«Ліс згорів, доля тварин невідома», 2025', en: '“The forest burned down, the fate of the animals is unknown”, 2025' },
+              materials: { uk: 'олівець, папір · 21×29', en: 'pencil, paper · 21×29' },
+            },
+            {
+              src: 'assets/img/zmiya-sam-sobi-zdobych.jpg', alt: 'Сам собі здобич', price: '0',
+              title: { uk: '«Сам собі здобич», 2024', en: '“Prey to Oneself”, 2024' },
+              materials: { uk: 'олія на полотні · 120×50 см', en: 'oil on canvas · 120×50 cm' },
+            },
+            {
+              src: 'assets/img/zmiya-shcho-ty-vidchuvaesh.jpg', alt: 'Що ти відчуваєш до змії, коли прожив її життя?', price: '0',
+              title: { uk: '«Що ти відчуваєш до змії, коли прожив її життя?», 2024', en: '“What do you feel towards the snake once you have lived its life?”, 2024' },
+              materials: { uk: 'олія на полотні · 100×55 см', en: 'oil on canvas · 100×55 cm' },
+            },
+            {
+              src: 'assets/img/zmiya-nytka.jpg', alt: 'Нитка', price: '0',
+              title: { uk: '«Нитка», 2024', en: '“Thread”, 2024' },
+              materials: { uk: 'олія на полотні · 80×20 см', en: 'oil on canvas · 80×20 cm' },
+            },
+            {
+              src: 'assets/img/lebid.jpg', alt: 'Лебідь', price: '0',
+              title: { uk: '«Лебідь», 2023', en: '“Swan”, 2023' },
+              materials: { uk: 'олія на полотні, вугільний олівець · 120×80 см', en: 'oil on canvas, charcoal pencil · 120×80 cm' },
+            },
+            {
+              src: 'assets/img/kazhan.jpg', alt: 'Кажан', price: '0',
+              title: { uk: '«Кажан», 2023', en: '“Bat”, 2023' },
+              materials: { uk: 'олія на полотні, вугільний олівець · 80×120 см', en: 'oil on canvas, charcoal pencil · 80×120 cm' },
+            },
+            {
+              src: 'assets/img/zviri.jpg', alt: 'Звірі', price: '0',
+              title: { uk: '«Звірі»', en: '“Beasts”' },
+              materials: { uk: 'олія на полотні, вугільний олівець · 125×85 см', en: 'oil on canvas, charcoal pencil · 125×85 cm' },
+            },
+          ],
+        },
+      ],
+    },
+
+    /* ── Роздільник у мозаїці: під ним ідуть проєкти ──────────── */
+    { type: 'divider', title: { uk: 'Проєкти', en: 'Projects' } },
 
     /* ── «Природа співчуття» (перформанс + відео) ─────────────── */
     {
