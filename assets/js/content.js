@@ -69,6 +69,9 @@ export const content = {
     telegram: 'https://t.me/+380686767422',
     city: { uk: 'м. Київ, Україна', en: 'Kyiv, Ukraine' },
     instagram: 'https://www.instagram.com/marisya_prus/',
+    // Фото у каруселі вгорі сторінки (слайд-шоу з крапками). Додати фото =
+    // покласти квадратний jpg у assets/img/ і дописати шлях. Порожньо → каруселі немає.
+    headerPhotos: ['assets/img/header1.jpg', 'assets/img/header2.jpg'],
   },
 
   /** Налаштування контактної форми (FormSubmit.co). */

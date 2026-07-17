@@ -1,4 +1,7 @@
 Тип,Тип-секції,Кікер (укр),Кікер (eng),Заголовок (укр),Заголовок (eng),Текст (укр),Текст (eng),Матеріали (укр),Матеріали (eng),Зображення,Підпис (укр),Підпис (eng),Лінк-текст (укр),Лінк-текст (eng),Лінк-URL,Тип-лінка,Сітка,Ціна
+section,header,,,,,,,,,,,,,,,,,
+work,,,,,,,,,,assets/img/header1.jpg,,,,,,,,
+work,,,,,,,,,,assets/img/header2.jpg,,,,,,,,
 section,statement,,,Artist Statement,,"Уся моя практика і життя зводяться до одного слова: тварини. В добу Антропоцентризму ми сфокусовані лише на власному існуванні, сприймаючи все навколо як фон, що призводить до загибелі природи. Своїм мистецтвом я розповідаю про власний досвід бачення цього світу, звертаючи увагу на наш взаємозв’язок з іншими видами, на їхнє життя та вразливе становище.
 
 Основні теми мого дослідження — це зникнення видів, байдужість до їхнього болю й крихкість життя, а також історія нашого співіснування. Війна в Україні додала моїй практиці ще один пласт: я досліджую тему екоциду, впливу воєнних дій на екосистеми, руйнування середовищ проживання та болісні історії тих, хто виживає в цих реаліях.
@@ -22,9 +25,9 @@ work,,,,"«Стайні — це що, військовий об’єкт?», 20
 work,,,,"«Морські коники», 2026","“Seahorses”, 2026",,,"олівець, папір, калька · 13×29","pencil, paper, tracing paper · 13×29",assets/img/morski-konyky.jpg,,,,,,,,0
 work,,,,"«Де закінчується незламність і починається безвідповідальність?», 2026","“Where does resilience end and irresponsibility begin?”, 2026",,,"олівець, папір · 21×29","pencil, paper · 21×29",assets/img/nezlamnist.jpg,,,,,,,,0
 work,,,,"«Ліс згорів, доля тварин невідома», 2025","“The forest burned down, the fate of the animals is unknown”, 2025",,,"олівець, папір · 21×29","pencil, paper · 21×29",assets/img/lis-zghoriv.jpg,,,,,,,,0
-work,,,,"«Сам собі здобич», 2024","“Prey to Oneself”, 2024",,,олія на полотні · 120×50 см,oil on canvas · 120×50 cm,assets/img/zmiya-sam-sobi-zdobych.jpg,,,,,,,,0
-work,,,,"«Що ти відчуваєш до змії, коли прожив її життя?», 2024","“What do you feel towards the snake once you have lived its life?”, 2024",,,олія на полотні · 100×55 см,oil on canvas · 100×55 cm,assets/img/zmiya-shcho-ty-vidchuvaesh.jpg,,,,,,,,0
-work,,,,"«Нитка», 2024","“Thread”, 2024",,,олія на полотні · 80×20 см,oil on canvas · 80×20 cm,assets/img/zmiya-nytka.jpg,,,,,,,,0
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
 work,,,,"«Лебідь», 2023","“Swan”, 2023",,,"олія на полотні, вугільний олівець · 120×80 см","oil on canvas, charcoal pencil · 120×80 cm",assets/img/lebid.jpg,,,,,,,,0
 work,,,,"«Кажан», 2023","“Bat”, 2023",,,"олія на полотні, вугільний олівець · 80×120 см","oil on canvas, charcoal pencil · 80×120 cm",assets/img/kazhan.jpg,,,,,,,,0
 work,,,,«Звірі»,“Beasts”,,,"олія на полотні, вугільний олівець · 125×85 см","oil on canvas, charcoal pencil · 125×85 cm",assets/img/zviri.jpg,,,,,,,,0
@@ -97,11 +100,11 @@ work,,,,"«Стайні — це що, військовий об’єкт?», 20
 work,,,,"«Морські коники», 2026","“Seahorses”, 2026",,,"олівець, папір, калька · 13×29","pencil, paper, tracing paper · 13×29",assets/img/morski-konyky.jpg,,,,,,,,
 work,,,,"«Де закінчується незламність і починається безвідповідальність?», 2026","“Where does resilience end and irresponsibility begin?”, 2026",,,"олівець, папір · 21×29","pencil, paper · 21×29",assets/img/nezlamnist.jpg,,,,,,,,
 work,,,,"«Ліс згорів, доля тварин невідома», 2025","“The forest burned down, the fate of the animals is unknown”, 2025",,,"олівець, папір · 21×29","pencil, paper · 21×29",assets/img/lis-zghoriv.jpg,,,,,,,,
-section,gallery,,,Серія «Змія»,Series “Snake”,"Серія досліджує подібність людини й змії — здатність до оновлення, трансформації, внутрішньої зміни і циклічність. Образ змії стає методом осмислення та опорою для певних періодів життя людини.","The series explores the affinity between the human and the snake — the capacity for renewal, transformation, inner change and cyclicality. The image of the snake becomes a method of reflection and a support for certain periods of a person’s life.",,,,,,,,,,grid-2,
-work,,,,"«Сам собі здобич», 2024","“Prey to Oneself”, 2024",,,олія на полотні · 120×50 см,oil on canvas · 120×50 cm,assets/img/zmiya-sam-sobi-zdobych.jpg,,,,,,,,
-work,,,,"«Що ти відчуваєш до змії, коли прожив її життя?», 2024","“What do you feel towards the snake once you have lived its life?”, 2024",,,олія на полотні · 100×55 см,oil on canvas · 100×55 cm,assets/img/zmiya-shcho-ty-vidchuvaesh.jpg,,,,,,,,
-group,,,,,,,,,,,,,,,,,grid-1,
-work,,,,"«Нитка», 2024","“Thread”, 2024",,,олія на полотні · 80×20 см,oil on canvas · 80×20 cm,assets/img/zmiya-nytka.jpg,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
 section,gallery,,,Серія «Стежки»,Series “Paths”,"Серія створена у селі Сокілець, де я прожила певний час і навчалася осмислювати себе через природу та тварин. Зустрічаючи їх, я шукала мінімальні форми взаємодії — поглядом або рухом — щоб встановити контакт і дослідити власні відчуття.","The series was created in the village of Sokilets, where I lived for a time and learned to make sense of myself through nature and animals. Meeting them, I looked for minimal forms of interaction — a glance or a movement — to establish contact and explore my own sensations.",,,,,,,,,,grid-1,
 work,,,,"«Лебідь», 2023","“Swan”, 2023",,,"олія на полотні, вугільний олівець · 120×80 см","oil on canvas, charcoal pencil · 120×80 cm",assets/img/lebid.jpg,,,,,,,,
 group,,,,,,,,,,,,,,,,,grid-2,

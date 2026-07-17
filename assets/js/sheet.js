@@ -123,7 +123,7 @@ export function buildSections(rows) {
 
   // Дописати накопичену групу в секцію, якщо в ній є роботи.
   const flushGroup = () => {
-    if (section && section.type === 'gallery' && group && group.works.length) {
+    if (section && (section.type === 'gallery' || section.type === 'header') && group && group.works.length) {
       section.groups.push(group);
     }
     group = null;
@@ -145,6 +145,11 @@ export function buildSections(rows) {
       } else if (kind === 'divider') {
         // Роздільник у мозаїці hero (напр. «Проєкти»). Плиток не має.
         section = { type: 'divider', title: title || { uk: '', en: '' } };
+      } else if (kind === 'header') {
+        // Каруселька фото вгорі сторінки. Наступні рядки work → її фото
+        // (важлива лише колонка «Зображення»: шлях у репо або лінк на Drive).
+        section = { type: 'header', groups: [] };
+        group = { grid: 'grid-1', works: [] };
       } else if (kind === 'split' || kind === 'split-reverse') {
         section = {
           type: 'split',

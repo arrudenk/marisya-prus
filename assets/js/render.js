@@ -319,15 +319,47 @@ const header = (lang, data) => `
   </header>`;
 
 /**
- * Hero: ім'я зверху, під ним мозаїка. Спершу дві великі плитки 2×2 —
- * «Artist Statement» (обкладинка — фото художниці) і «Artworks», — потім
- * роздільник «Проєкти / Projects», під ним плитки проєктів.
- * Landscape (див. CSS): 4 колонки (великі плитки 2×2, проєкти 1×1).
- * Portrait: одна колонка — кожна плитка на всю ширину, по одній за раз.
- * Клік по будь-якій плитці відкриває її вміст в оверлеї.
+ * Каруселька фото художниці вгорі сторінки: вузьке широке вікно (обрізає
+ * квадрат по центру), фото слайдяться вбік; клікабельні крапки знизу.
+ * Логіка (авто-слайд, драг/свайп) — у app.js → setupHeaderCarousel().
+ * Рендериться тільки якщо задано artist.headerPhotos.
+ */
+const headerCarousel = (photos) => {
+  if (!photos || !photos.length) return '';
+  const slides = photos
+    .map((src) => `<div class="fc-slide"><img src="${imageUrl(src, { width: IMG.full })}" alt="" loading="lazy"></div>`)
+    .join('');
+  const dots = photos
+    .map((_, i) => `<button class="fc-dot${i === 0 ? ' active' : ''}" data-go="${i}" aria-label="${i + 1}"></button>`)
+    .join('');
+  return `
+    <div class="header-carousel">
+      <div class="fc-window">
+        <div class="fc-track">${slides}</div>
+      </div>
+      <div class="fc-dots">${dots}</div>
+    </div>`;
+};
+
+/**
+ * Фото для каруселі: з секції типу `header` у таблиці (рядки work →
+ * колонка «Зображення»), а якщо такої секції нема — з artist.headerPhotos
+ * (резерв content.js). Так фото хедера можна міняти прямо в Google-таблиці.
+ */
+const headerPhotosFrom = (data) => {
+  const sec = data.sections?.find((s) => s.type === 'header');
+  const fromSheet = sec ? sec.groups.flatMap((g) => g.works).map((w) => w.src).filter(Boolean) : [];
+  return fromSheet.length ? fromSheet : (data.artist.headerPhotos || []);
+};
+
+/**
+ * Hero: зверху каруселька фото художниці, під нею мозаїка плиток — дві великі
+ * плитки 2×2 («Artist Statement», «Artworks»), роздільник «Проєкти» і плитки
+ * проєктів. Клік по плитці відкриває її вміст в оверлеї.
  */
 const hero = (lang, data) => `
   <section class="hero">
+    ${headerCarousel(headerPhotosFrom(data))}
     <div class="hero-mosaic">
       ${heroMosaic(lang, data)}
     </div>

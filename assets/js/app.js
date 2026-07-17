@@ -53,6 +53,9 @@ function render() {
   // Плитки hero перестворюються при кожному ререндері — перепідключаємо
   // скрол-спостерігач до нових елементів.
   setupTileReveal();
+
+  // Каруселька фото теж перестворюється — перезапускаємо її логіку.
+  setupHeaderCarousel();
 }
 
 /* ── Реакція плиток на скрол (тач-пристрої без hover) ─────────── */
@@ -82,6 +85,81 @@ function setupTileReveal() {
     { rootMargin: '-35% 0px -35% 0px' }, // «активна» лише смуга ~30% по центру
   );
   tiles.forEach((tile) => tileObserver.observe(tile));
+}
+
+/* ── Каруселька фото (вгорі сторінки) ─────────────────────────── */
+
+/**
+ * Горизонтальна каруселька: авто-слайд по таймеру + клікабельні крапки +
+ * драг/свайп (миша й тач). Перф: слайд — CSS transform (композитор),
+ * один setInterval; таймер стоїть, коли каруселька поза екраном
+ * (IntersectionObserver) чи вкладка прихована, і вимкнений при
+ * prefers-reduced-motion. Старий таймер і спостерігач знімаємо перед новим
+ * налаштуванням — без витоків при ререндері. (Слухачі pointer/click висять
+ * на елементах, що перестворюються ререндером, тож збираються GC зі старим DOM.)
+ */
+let fcTimer = null;
+let fcObserver = null;
+function setupHeaderCarousel() {
+  if (fcTimer) { clearInterval(fcTimer); fcTimer = null; }
+  if (fcObserver) { fcObserver.disconnect(); fcObserver = null; }
+
+  const win = app.querySelector('.fc-window');
+  const track = win?.querySelector('.fc-track');
+  if (!track || !track.children.length) return;
+  const slides = track.children.length;
+  const dots = [...app.querySelectorAll('.fc-dot')];
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  let index = 0;
+  let inView = true;
+
+  const apply = () => {
+    track.style.transform = `translateX(${-index * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+  };
+  const goTo = (i) => { index = (i + slides) % slides; track.classList.remove('dragging'); apply(); };
+
+  const startAuto = () => {
+    if (fcTimer) { clearInterval(fcTimer); fcTimer = null; }
+    if (reduced || slides < 2) return;             // нема сенсу крутити один слайд
+    fcTimer = setInterval(() => { if (inView && !document.hidden) goTo(index + 1); }, 5000);
+  };
+  const stopAuto = () => { if (fcTimer) { clearInterval(fcTimer); fcTimer = null; } };
+
+  // Клікабельні крапки
+  dots.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); startAuto(); }));
+
+  // Драг/свайп (pointer — і миша, і тач)
+  let dragging = false, startX = 0, dx = 0, w = 1;
+  win.addEventListener('pointerdown', (e) => {
+    dragging = true; startX = e.clientX; dx = 0; w = win.clientWidth || 1;
+    stopAuto();
+    track.classList.add('dragging');            // без transition — слайд іде за пальцем
+    win.setPointerCapture?.(e.pointerId);
+  });
+  win.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    dx = e.clientX - startX;
+    track.style.transform = `translateX(calc(${-index * 100}% + ${dx}px))`;
+  });
+  const endDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    if (Math.abs(dx) > w * 0.15) goTo(index + (dx < 0 ? 1 : -1)); // достатній свайп → сусідній
+    else goTo(index);                                             // інакше — назад на місце
+    startAuto();
+  };
+  win.addEventListener('pointerup', endDrag);
+  win.addEventListener('pointercancel', endDrag);
+
+  // Пауза, коли футер не видно
+  if ('IntersectionObserver' in window) {
+    fcObserver = new IntersectionObserver((ents) => { inView = ents[0].isIntersecting; }, { threshold: 0.15 });
+    fcObserver.observe(win);
+  }
+
+  apply();
+  startAuto();
 }
 
 /* ── Оверлей проєкту ─────────────────────────────────────────── */
