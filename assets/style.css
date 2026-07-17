@@ -76,6 +76,7 @@ html.dark .topbar, html.dark .bottombar {
   text-align: center;
   text-decoration: none;
   font-weight: 600;
+  font-size: 1.15em;
   letter-spacing: 0.03em;
 }
 .topbar .nav-menu { justify-self: end; }
@@ -302,14 +303,19 @@ html.dark .fc-dot.active { background: #eee; }
 
 .grid { display: grid; gap: 1.8rem; margin-top: 2rem; }
 .grid-1 { grid-template-columns: 1fr; max-width: 860px; margin-left: auto; margin-right: auto; }
-.grid-2 { grid-template-columns: repeat(2, 1fr); }
-.grid-3 { grid-template-columns: repeat(3, 1fr); }
+/* Роботи різної ширини (портретні/квадратні/ширші полотна) групуються
+   зліва направо в ряд з однаковою висотою — flex замість рівних колонок
+   (ширина фігур — за пропорціями зображення), переносяться на новий
+   рядок, коли не вміщаються (природний максимум ≈ 3 в ряд). */
+.grid-2, .grid-3 { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
 /* Артбук: masonry на CSS-колонках — картинки різної висоти пакуються
    щільно згори вниз, без порожнеч у рядках і без обрізання. */
 .grid-4 { display: block; column-count: 2; column-gap: 1.8rem; }
 .grid-4 figure { margin: 0 0 1.8rem; break-inside: avoid; }
 .grid-sketches { grid-template-columns: repeat(5, 1fr); gap: 1rem; }
 .grid figure img { width: 100%; }
+.grid-2 figure, .grid-3 figure { width: auto; }
+.grid-2 figure img, .grid-3 figure img { width: auto; height: min(52vh, 520px); max-width: 100%; object-fit: contain; }
 .grid-cap { display: block; margin-top: 1rem; font-size: 0.82rem; color: #555; text-align: center; }
 /* Ціна в правому нижньому кутку картини (накладка поверх зображення). */
 .work-media { position: relative; display: block; }
@@ -419,18 +425,41 @@ html.dark .fc-dot.active { background: #eee; }
   }
   .nav-item { text-align: center; }
   .page-panel, .zapysky-panel { padding: 4.2rem 1rem 5.4rem; }
+  /* Текст усередині сторінок (about + проєкти) — трохи менший на мобільному. */
+  .page-panel .panel-inner { font-size: 0.88rem; line-height: 1.6; }
   .split, .split.reverse { grid-template-columns: 1fr; gap: 1.5rem; }
   .split.reverse .work-text { order: 1; }
   .split.reverse figure { order: 2; }
   .split figure { position: static; }
-  .grid-3 { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
-  .grid-2 { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
   .grid-4 { column-count: 1; max-width: 480px; margin-left: auto; margin-right: auto; }
   .grid-sketches { grid-template-columns: repeat(3, 1fr); }
   .contact-card { padding: 2rem 1.4rem; }
+  /* Ряд стає колонкою — по одній роботі за раз (в лендскейпі — рядок зліва
+     направо, у портреті — вертикальний список). */
+  .grid-2, .grid-3 { flex-direction: column; align-items: center; max-width: 480px; margin-left: auto; margin-right: auto; }
+  /* Картинка (з підписом) завжди вміщається по висоті екрана: fixed-бари
+     (topbar+bottombar ≈ 100px) + запас під підпис і відступи. Ширина —
+     авто за пропорціями, а не на всю ширину контейнера (інакше портретні
+     роботи, напр. 75×150, ставали вищими за екран). */
+  .grid figure img, .split figure img {
+    width: auto;
+    max-width: 100%;
+    max-height: calc(100svh - 170px);
+    margin: 0 auto;
+    object-fit: contain;
+  }
 }
 @media (max-width: 480px) {
   .grid-sketches { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Телефон у лендскейпі (широкий, але низький екран — не ловиться за
+   шириною) — той самий менший розмір тексту, що й у портреті. Розкладку
+   (рядок/колонка картинок) це не чіпає, лише розмір шрифту. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .topbar, .bottombar { font-size: 0.78rem; }
+  .zapysky-link { font-size: 0.72rem; }
+  .page-panel .panel-inner { font-size: 0.88rem; line-height: 1.6; }
 }
 
 /* Поважаємо reduced-motion: шторки/перефарбування без анімації. */
