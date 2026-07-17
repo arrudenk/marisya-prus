@@ -180,11 +180,129 @@ function setPanel(panel, html) {
     panel.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
   } else if (panel.classList.contains('open')) {
+    teardownVideo(panel); // стоп відео й мережі одразу при закритті
     panel.classList.remove('open');
     panel.setAttribute('aria-hidden', 'true');
     setTimeout(() => {
       if (!panel.classList.contains('open')) inner.innerHTML = '';
     }, CLEAR_DELAY);
+  }
+}
+
+let videoIO = null; // спостерігач скролу для відео (мобільний)
+
+/** Зупиняє всі відео панелі й вивантажує джерела (стоп трафіку при закритті). */
+function teardownVideo(panel) {
+  if (videoIO) { videoIO.disconnect(); videoIO = null; }
+  panel.querySelectorAll('.cvp-video').forEach((v) => {
+    v.pause();
+    v.removeAttribute('src');
+    v.load();
+  });
+}
+
+/**
+ * Один плеєр: дротує контролі, повертає керування (start/stop). Джерело
+ * ставиться лише при першому старті (preload="none" → нуль трафіку інакше).
+ */
+function initPlayer(cvp) {
+  const v = cvp.querySelector('.cvp-video');
+  const q = (s) => cvp.querySelector(s);
+  const bigBtn = q('.cvp-big'), unmuteBtn = q('.cvp-unmute');
+  const playBtn = q('.cvp-play'), muteBtn = q('.cvp-mute'), fsBtn = q('.cvp-fs');
+  const timeEl = q('.cvp-time'), progress = q('.cvp-progress'), fill = q('.cvp-progress-fill');
+  let loaded = false;
+
+  const fmt = (s) => {
+    if (!isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+    return `${m}:${String(sec).padStart(2, '0')}`;
+  };
+  const syncPlayUI = () => { playBtn.textContent = v.paused ? '▶' : '❚❚'; bigBtn.hidden = !v.paused; };
+  const syncMuteUI = () => { muteBtn.textContent = v.muted ? '🔇' : '♪'; unmuteBtn.hidden = !v.muted; };
+
+  const ensureSrc = () => { if (!loaded) { v.src = cvp.dataset.src; loaded = true; } };
+  /** Старт відтворення. preferSound=true (перше відео) — пробуємо зі звуком,
+   *  при блоці браузера падаємо на muted + кнопка. Інакше одразу muted
+   *  (автоплей без жесту дозволений лише без звуку). */
+  const start = (preferSound) => {
+    ensureSrc();
+    v.muted = !preferSound;
+    v.play().then(syncMuteUI).catch(() => {
+      if (!v.muted) { v.muted = true; v.play().catch(() => {}); }
+      syncMuteUI();
+    });
+  };
+  const stop = () => v.pause();
+  const toggle = () => { v.paused ? (ensureSrc(), v.play().catch(() => {})) : v.pause(); };
+
+  v.addEventListener('play', syncPlayUI);
+  v.addEventListener('pause', syncPlayUI);
+  // Пропорції плеєра — під реальні розміри відео (портрет/ландшафт).
+  v.addEventListener('loadedmetadata', () => {
+    if (v.videoWidth) cvp.style.setProperty('--cvp-ar', `${v.videoWidth} / ${v.videoHeight}`);
+  });
+  v.addEventListener('timeupdate', () => {
+    const d = v.duration || 0;
+    fill.style.width = d ? `${(v.currentTime / d) * 100}%` : '0%';
+    timeEl.textContent = fmt(v.currentTime);
+  });
+  v.addEventListener('click', toggle);
+  bigBtn.addEventListener('click', toggle);
+  playBtn.addEventListener('click', toggle);
+  const setMuted = (m) => { v.muted = m; syncMuteUI(); if (!m && v.paused) v.play().catch(() => {}); };
+  muteBtn.addEventListener('click', () => setMuted(!v.muted));
+  unmuteBtn.addEventListener('click', () => setMuted(false));
+  progress.addEventListener('click', (e) => {
+    const r = progress.getBoundingClientRect();
+    if (v.duration) v.currentTime = ((e.clientX - r.left) / r.width) * v.duration;
+  });
+  fsBtn.addEventListener('click', () => {
+    const el = cvp.querySelector('.cvp-stage') || cvp;
+    if (document.fullscreenElement) document.exitFullscreen();
+    else el.requestFullscreen?.();
+  });
+
+  syncPlayUI(); syncMuteUI();
+  return { cvp, v, start, stop };
+}
+
+/**
+ * Плеєри у відкритій панелі. Перше відео стартує ОДРАЗУ (best-effort зі
+ * звуком → muted+кнопка при блоці), навіть якщо його ще не видно. Решта:
+ * на десктопі (є hover) — при наведенні; на тачі — коли доскролив (по черзі),
+ * через IntersectionObserver. Одночасно грає одне (інші паузяться).
+ */
+function setupVideoPlayer(panel) {
+  if (videoIO) { videoIO.disconnect(); videoIO = null; }
+  const cvps = [...panel.querySelectorAll('.cvp')];
+  if (!cvps.length) return;
+  const players = cvps.map(initPlayer);
+  const playOnly = (pl, preferSound) => {
+    players.forEach((p) => { if (p !== pl) p.stop(); });
+    pl.start(preferSound);
+  };
+
+  // Перше — одразу зі звуком (best-effort), решта на вимогу.
+  playOnly(players[0], true);
+
+  const touch = window.matchMedia?.('(hover: none)').matches;
+  if (touch && 'IntersectionObserver' in window) {
+    // Мобільний: грає найбільш видиме відео, решта — пауза (по черзі при скролі).
+    videoIO = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        const pl = players.find((p) => p.cvp === e.target);
+        if (!pl) return;
+        if (e.isIntersecting) playOnly(pl, false); else pl.stop();
+      });
+    }, { rootMargin: '-30% 0px -30% 0px' });
+    players.slice(1).forEach((p) => videoIO.observe(p.cvp)); // перше вже грає
+  } else {
+    // Десктоп: наведення грає відео (і паузить інші), відведення — пауза.
+    players.slice(1).forEach((p) => {
+      p.cvp.addEventListener('pointerenter', () => playOnly(p, false));
+      p.cvp.addEventListener('pointerleave', () => p.stop());
+    });
   }
 }
 
@@ -198,7 +316,7 @@ function syncFromHash() {
 
   // Інлайн-сторінка (about / проєкт) — шторка згори.
   setPanel(pagePanelEl(), slug ? renderProjectHTML(slug, lang, activeContent) : null);
-  if (slug) pagePanelEl().scrollTop = 0;
+  if (slug) { pagePanelEl().scrollTop = 0; setupVideoPlayer(pagePanelEl()); }
 
   // «Записки» — темна шторка знизу + перефарбування сайту в чорне.
   const zPanel = zapyskyPanelEl();
@@ -342,6 +460,12 @@ document.addEventListener('keydown', (e) => {
   if (isLightboxOpen()) return closeLightbox();
   if (isContactOpen()) return closeContact();
   if (isPageOpen() || isZapyskyOpen()) closeTopPage();
+});
+
+// Прихована вкладка → ставимо відео на паузу (не грати наосліп). Один
+// глобальний слухач (без накопичення при ререндерах панелей).
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) document.querySelectorAll('.cvp-video').forEach((v) => v.pause());
 });
 
 /* ── Старт ────────────────────────────────────────────────────

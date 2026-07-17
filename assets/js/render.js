@@ -37,7 +37,14 @@ const UI = {
   research: { uk: 'дослідження', en: 'research' },
   contacts: { uk: 'contacts', en: 'contacts' },
   close: { uk: 'закрити', en: 'close' },
+  unmute: { uk: 'увімкнути звук', en: 'unmute' },
+  play: { uk: 'відтворити', en: 'play' },
+  fullscreen: { uk: 'на весь екран', en: 'fullscreen' },
 };
+
+/** Чи є посилання прямим відеофайлом (локальний mp4/webm/mov) — тоді
+ *  показуємо кастомний інлайн-плеєр, а не лайтбокс із Drive/YouTube. */
+const isVideoFile = (href) => /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(String(href || ''));
 
 /**
  * Перетворює значення картинки на реальний URL.
@@ -202,6 +209,31 @@ export function renderZapyskyHTML(lang, data = content) {
     </div>`;
 }
 
+/* ── Кастомний відео-плеєр (інлайн, автостарт) ───────────────── */
+
+/**
+ * Мінімалістичний плеєр над нативним `<video>` (буферизація — браузером;
+ * без зовнішніх залежностей). Логіка (автостарт best-effort зі звуком →
+ * fallback без звуку, контроли, стоп при закритті) — у app.js →
+ * setupVideoPlayer(). `preload="none"` + src ставить app.js лише коли
+ * панель відкрита (нуль трафіку інакше). Poster — кадр-заставка до старту.
+ */
+const videoPlayer = (src, poster, lang) => `
+    <figure class="cvp" data-src="${src}">
+      <div class="cvp-stage">
+        <video class="cvp-video" playsinline preload="none" poster="${imageUrl(poster, { width: IMG.full })}"></video>
+        <button class="cvp-unmute" hidden>${t(UI.unmute, lang)}</button>
+        <button class="cvp-big" aria-label="${t(UI.play, lang)}" hidden></button>
+        <div class="cvp-bar">
+          <button class="cvp-play" aria-label="${t(UI.play, lang)}">▶</button>
+          <span class="cvp-time">0:00</span>
+          <div class="cvp-progress"><div class="cvp-progress-fill"></div></div>
+          <button class="cvp-mute" aria-label="${t(UI.unmute, lang)}">♪</button>
+          <button class="cvp-fs" aria-label="${t(UI.fullscreen, lang)}">⤢</button>
+        </div>
+      </div>
+    </figure>`;
+
 /* ── Секції (диспетчеризація за section.type) ────────────────── */
 
 const sectionRenderers = {
@@ -213,20 +245,36 @@ const sectionRenderers = {
       ${paragraphs(s.paragraphs, lang)}
     </section>`,
 
-  /** Текст поруч із великим зображенням (image липне при скролі). */
-  split: (s, lang) => `
+  /** Текст поруч із великим зображенням (image липне при скролі).
+   *  Якщо link — відео-файл (embed:'video' + .mp4/…), замість картинки
+   *  показуємо кастомний плеєр, що стартує при відкритті проєкту. */
+  split: (s, lang) => {
+    // Медіа секції — ЄДИНИЙ впорядкований список (як у таблиці): кожен
+    // елемент { type:'image'|'video', src, alt?, caption? }. Зображення й
+    // відео йдуть у тому порядку, у якому додані. Фолбек — одиничне s.image.
+    const media = (s.media && s.media.length)
+      ? s.media
+      : (s.image ? [{ type: 'image', src: s.image.src, alt: s.image.alt, caption: s.image.caption }] : []);
+    // Постер для відео — перше зображення списку (або s.image).
+    const poster = (s.image && s.image.src) || media.find((m) => m.type === 'image')?.src || '';
+    const figFor = (im) => `<figure>
+        ${imgTag(im.src, im.alt)}
+        ${im.caption ? `<figcaption>${t(im.caption, lang)}</figcaption>` : ''}
+      </figure>`;
+    const parts = media.map((m) => (m.type === 'video' ? videoPlayer(m.src, poster, lang) : figFor(m)));
+    const isVideo = media.some((m) => m.type === 'video');
+    const html = media.length > 1 ? `<div class="split-media">${parts.join('')}</div>` : parts.join('');
+    return `
     <section class="work split${s.reverse ? ' reverse' : ''}">
       <div class="work-text">
         <p class="kicker">${t(s.kicker, lang)}</p>
         <h2>${t(s.title, lang)}</h2>
         ${paragraphs(s.paragraphs, lang)}
-        ${extLink(s.link, lang)}
+        ${isVideo ? '' : extLink(s.link, lang)}
       </div>
-      <figure>
-        ${imgTag(s.image.src, s.image.alt)}
-        ${s.image.caption ? `<figcaption>${t(s.image.caption, lang)}</figcaption>` : ''}
-      </figure>
-    </section>`,
+      ${html}
+    </section>`;
+  },
 
   /** Заголовок + (опційно) текст і лінк + одна чи кілька сіток робіт. */
   gallery: (s, lang) => `

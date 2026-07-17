@@ -334,6 +334,59 @@ html.dark .fc-dot.active { background: #eee; }
 .ext-link { display: inline-block; margin-top: 0.4rem; text-underline-offset: 4px; }
 .grid figure img, .split figure img { cursor: zoom-in; }
 
+/* Відео-проєкт: плеєр + фото стовпчиком у медіа-колонці split. */
+.split-media { display: flex; flex-direction: column; gap: 1.5rem; }
+.split-media figure { position: static; } /* не липне, на відміну від звичайного split-figure */
+
+/* ===== Кастомний відео-плеєр (інлайн у split) ===== */
+.cvp { margin: 0; }
+.cvp-stage {
+  position: relative;
+  /* Пропорції підлаштовуються під кожне відео (app.js ставить --cvp-ar на
+     loadedmetadata); до завантаження — 16:9 як типове. */
+  aspect-ratio: var(--cvp-ar, 16 / 9);
+  max-height: 78svh;            /* портретні відео не переростають екран */
+  margin: 0 auto;
+  background: #000;
+  overflow: hidden;
+}
+.cvp-video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; cursor: pointer; }
+/* Велика центральна кнопка Play (видима, поки на паузі). */
+.cvp-big {
+  position: absolute; inset: 0; margin: auto;
+  width: 64px; height: 64px;
+  border: none; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff; cursor: pointer;
+}
+.cvp-big::before { content: '▶'; font-size: 1.3rem; margin-left: 3px; }
+/* Банер «увімкнути звук» — коли автоплей стартував без звуку. */
+.cvp-unmute {
+  position: absolute; top: 0.7rem; left: 0.7rem;
+  background: rgba(0, 0, 0, 0.62); color: #fff;
+  border: none; cursor: pointer;
+  font: inherit; font-size: 0.76rem; letter-spacing: 0.02em;
+  padding: 0.35rem 0.7rem;
+}
+/* Нижня панель контролів — проявляється на hover (десктоп), завжди видима на тачі. */
+.cvp-bar {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  opacity: 0; transition: opacity 0.25s ease;
+}
+.cvp-stage:hover .cvp-bar, .cvp-stage:focus-within .cvp-bar { opacity: 1; }
+.cvp-bar button {
+  background: none; border: none; color: #fff;
+  font: inherit; font-size: 0.9rem; line-height: 1;
+  padding: 0.2rem; cursor: pointer;
+}
+.cvp-time { color: #fff; font-size: 0.74rem; font-variant-numeric: tabular-nums; }
+.cvp-progress { flex: 1; height: 4px; background: rgba(255, 255, 255, 0.3); cursor: pointer; position: relative; }
+.cvp-progress-fill { height: 100%; width: 0; background: #fff; }
+@media (hover: none) { .cvp-bar { opacity: 1; } }
+
 /* ===== Маленьке віконце contacts («режим кінотеатру») ===== */
 .contact-modal {
   position: fixed;

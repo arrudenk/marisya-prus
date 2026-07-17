@@ -63,7 +63,7 @@ export const content = {
   artist: {
     name: { uk: 'Прус Марися', en: 'Marysia Prus' },
     tagline: { uk: 'художниця · Київ, Україна', en: 'artist · Kyiv, Ukraine' },
-    photo: 'assets/img/hero.jpg',
+    photo: 'assets/img/home/hero.jpg',
     email: 'Prus.mmm22@gmail.com',
     phoneLabel: '+38 068 676 74 22 (Telegram)',
     telegram: 'https://t.me/+380686767422',
@@ -71,7 +71,7 @@ export const content = {
     instagram: 'https://www.instagram.com/marisya_prus/',
     // Фото у квадратному слайдері на головній (авто-гортання + крапки).
     // Додати фото = покласти jpg у assets/img/ і дописати шлях.
-    headerPhotos: ['assets/img/header1.jpg', 'assets/img/header2.jpg', 'assets/img/hero.jpg'],
+    headerPhotos: ['assets/img/home/header1.jpg', 'assets/img/home/header2.jpg', 'assets/img/home/hero.jpg'],
   },
 
   /**
@@ -133,77 +133,77 @@ export const content = {
           grid: 'grid-2',
           works: [
             {
-              src: 'assets/img/mizh-aksolotl.jpg', alt: 'Аксолотль', price: '0',
+              src: 'assets/img/mizh/mizh-aksolotl.jpg', alt: 'Аксолотль', price: '0',
               title: { uk: '«Аксолотль», 2025', en: '“Axolotl”, 2025' },
               materials: { uk: 'олія на полотні, нитка · 70×80 см', en: 'oil on canvas, thread · 70×80 cm' },
             },
             {
-              src: 'assets/img/mizh-perehuznia.jpg', alt: 'Перегузня', price: '0',
+              src: 'assets/img/mizh/mizh-perehuznia.jpg', alt: 'Перегузня', price: '0',
               title: { uk: '«Перегузня», 2025', en: '“Marbled Polecat”, 2025' },
               materials: { uk: 'олія на полотні, нитка · 70×80 см', en: 'oil on canvas, thread · 70×80 cm' },
             },
             {
-              src: 'assets/img/leleka.jpg', alt: 'Лелека', price: '0',
+              src: 'assets/img/istorii/leleka.jpg', alt: 'Лелека', price: '0',
               title: { uk: '«Лелека», 2025', en: '“Stork”, 2025' },
               materials: { uk: 'олія на полотні · 75×150', en: 'oil on canvas · 75×150' },
             },
             {
-              src: 'assets/img/nikudy-tikaty.jpg', alt: 'Нікуди тікати', price: '0',
+              src: 'assets/img/istorii/nikudy-tikaty.jpg', alt: 'Нікуди тікати', price: '0',
               title: { uk: '«Нікуди тікати», 2025', en: '“Nowhere to Run”, 2025' },
               materials: { uk: 'олія на полотні · 75×150', en: 'oil on canvas · 75×150' },
             },
             {
-              src: 'assets/img/u-travi-zhyve-vohon.jpg', alt: 'У траві живе вогонь', price: '0',
+              src: 'assets/img/istorii/u-travi-zhyve-vohon.jpg', alt: 'У траві живе вогонь', price: '0',
               title: { uk: '«У траві живе вогонь», 2025', en: '“Fire Lives in the Grass”, 2025' },
               materials: { uk: 'олія на полотні · 65×150', en: 'oil on canvas · 65×150' },
             },
             {
-              src: 'assets/img/stayni.jpg', alt: 'Стайні — це що, військовий об’єкт?', price: '0',
+              src: 'assets/img/hrafika/stayni.jpg', alt: 'Стайні — це що, військовий об’єкт?', price: '0',
               title: { uk: '«Стайні — це що, військовий об’єкт?», 2024', en: '“Stables — a military object, then?”, 2024' },
               materials: { uk: 'олівець на папері · 20×28 см', en: 'pencil on paper · 20×28 cm' },
             },
             {
-              src: 'assets/img/morski-konyky.jpg', alt: 'Морські коники', price: '0',
+              src: 'assets/img/hrafika/morski-konyky.jpg', alt: 'Морські коники', price: '0',
               title: { uk: '«Морські коники», 2026', en: '“Seahorses”, 2026' },
               materials: { uk: 'олівець, папір, калька · 13×29', en: 'pencil, paper, tracing paper · 13×29' },
             },
             {
-              src: 'assets/img/nezlamnist.jpg', alt: 'Де закінчується незламність і починається безвідповідальність?', price: '0',
+              src: 'assets/img/hrafika/nezlamnist.jpg', alt: 'Де закінчується незламність і починається безвідповідальність?', price: '0',
               title: { uk: '«Де закінчується незламність і починається безвідповідальність?», 2026', en: '“Where does resilience end and irresponsibility begin?”, 2026' },
               materials: { uk: 'олівець, папір · 21×29', en: 'pencil, paper · 21×29' },
             },
             {
-              src: 'assets/img/lis-zghoriv.jpg', alt: 'Ліс згорів, доля тварин невідома', price: '0',
+              src: 'assets/img/hrafika/lis-zghoriv.jpg', alt: 'Ліс згорів, доля тварин невідома', price: '0',
               title: { uk: '«Ліс згорів, доля тварин невідома», 2025', en: '“The forest burned down, the fate of the animals is unknown”, 2025' },
               materials: { uk: 'олівець, папір · 21×29', en: 'pencil, paper · 21×29' },
             },
             {
-              src: 'assets/img/zmiya-sam-sobi-zdobych.jpg', alt: 'Сам собі здобич', price: '0',
+              src: 'assets/img/zmiya/zmiya-sam-sobi-zdobych.jpg', alt: 'Сам собі здобич', price: '0',
               title: { uk: '«Сам собі здобич», 2024', en: '“Prey to Oneself”, 2024' },
               materials: { uk: 'олія на полотні · 120×50 см', en: 'oil on canvas · 120×50 cm' },
             },
             {
-              src: 'assets/img/zmiya-shcho-ty-vidchuvaesh.jpg', alt: 'Що ти відчуваєш до змії, коли прожив її життя?', price: '0',
+              src: 'assets/img/zmiya/zmiya-shcho-ty-vidchuvaesh.jpg', alt: 'Що ти відчуваєш до змії, коли прожив її життя?', price: '0',
               title: { uk: '«Що ти відчуваєш до змії, коли прожив її життя?», 2024', en: '“What do you feel towards the snake once you have lived its life?”, 2024' },
               materials: { uk: 'олія на полотні · 100×55 см', en: 'oil on canvas · 100×55 cm' },
             },
             {
-              src: 'assets/img/zmiya-nytka.jpg', alt: 'Нитка', price: '0',
+              src: 'assets/img/zmiya/zmiya-nytka.jpg', alt: 'Нитка', price: '0',
               title: { uk: '«Нитка», 2024', en: '“Thread”, 2024' },
               materials: { uk: 'олія на полотні · 80×20 см', en: 'oil on canvas · 80×20 cm' },
             },
             {
-              src: 'assets/img/lebid.jpg', alt: 'Лебідь', price: '0',
+              src: 'assets/img/stezhky/lebid.jpg', alt: 'Лебідь', price: '0',
               title: { uk: '«Лебідь», 2023', en: '“Swan”, 2023' },
               materials: { uk: 'олія на полотні, вугільний олівець · 120×80 см', en: 'oil on canvas, charcoal pencil · 120×80 cm' },
             },
             {
-              src: 'assets/img/kazhan.jpg', alt: 'Кажан', price: '0',
+              src: 'assets/img/stezhky/kazhan.jpg', alt: 'Кажан', price: '0',
               title: { uk: '«Кажан», 2023', en: '“Bat”, 2023' },
               materials: { uk: 'олія на полотні, вугільний олівець · 80×120 см', en: 'oil on canvas, charcoal pencil · 80×120 cm' },
             },
             {
-              src: 'assets/img/zviri.jpg', alt: 'Звірі', price: '0',
+              src: 'assets/img/stezhky/zviri.jpg', alt: 'Звірі', price: '0',
               title: { uk: '«Звірі»', en: '“Beasts”' },
               materials: { uk: 'олія на полотні, вугільний олівець · 125×85 см', en: 'oil on canvas, charcoal pencil · 125×85 cm' },
             },
@@ -241,12 +241,15 @@ export const content = {
           en: 'Shared experience blurs these boundaries, letting us feel animal life as equal in value to human life. It becomes the moment when each person chooses their role in the system of coexistence.',
         },
       ],
-      link: {
-        label: { uk: 'Відеозапис роботи ↗', en: 'Video documentation ↗' },
-        href: 'https://drive.google.com/file/d/1e1mZJLeo_56GDrpwHbdxY4QUyh7T0z08/view?usp=sharing',
-        embed: 'video',
-      },
-      image: { src: 'assets/img/performance.jpg', alt: 'Природа співчуття — перформанс' },
+      // Медіа — впорядкований список (як у таблиці): зображення й відео
+      // показуються в цьому порядку. Тут фото зверху, під ним 3 відео.
+      // Перше відео стартує одразу; решта — при скролі/наведенні.
+      media: [
+        { type: 'image', src: 'assets/img/pryrodaspivchutia/performance.jpg', alt: 'Природа співчуття — перформанс' },
+        { type: 'video', src: 'assets/img/pryrodaspivchutia/performance_prep.mp4' },
+        { type: 'video', src: 'assets/img/pryrodaspivchutia/performance_build.mp4' },
+        { type: 'video', src: 'assets/img/pryrodaspivchutia/performance_deco.mp4' },
+      ],
     },
 
     /* ── Інсталяція ───────────────────────────────────────────── */
@@ -276,14 +279,18 @@ export const content = {
           en: 'The aim of the work is to make visible the invisible price of war paid by the environment. It is a call to preserve the memory of this ecological tragedy and to recognise nature as a subject that experiences pain and loss, and has the same right to life and safety as a human being.',
         },
       ],
-      image: {
-        src: 'assets/img/installation.jpg',
-        alt: 'Пам’яті зраненої землі — інсталяція',
-        caption: {
-          uk: '2026 · олія на папері, туш на тканині, нитка · 150×70 см',
-          en: '2026 · oil on paper, ink on fabric, thread · 150×70 cm',
+      // Медіа у порядку таблиці (усі — з папки pamyati).
+      media: [
+        {
+          type: 'image', src: 'assets/img/pamyati/installation.jpg', alt: 'Пам’яті зраненої землі — інсталяція',
+          caption: {
+            uk: '2026 · олія на папері, туш на тканині, нитка · 150×70 см',
+            en: '2026 · oil on paper, ink on fabric, thread · 150×70 cm',
+          },
         },
-      },
+        { type: 'image', src: 'assets/img/pamyati/krit.jpeg', alt: 'Пам’яті зраненої землі' },
+        { type: 'image', src: 'assets/img/pamyati/stepy.jpeg', alt: 'Пам’яті зраненої землі' },
+      ],
     },
 
     /* ── Артбук «(не)забуті історії тварин» + PDF-щоденник ────── */
@@ -320,11 +327,11 @@ export const content = {
         {
           grid: 'grid-4',
           works: [
-            { src: 'assets/img/artbook-stand.jpg', alt: 'Артбук (не)забуті історії тварин' },
-            { src: 'assets/img/artbook-1.jpg', alt: 'Артбук — розворот' },
-            { src: 'assets/img/artbook-2.jpg', alt: 'Артбук — сторінка' },
-            { src: 'assets/img/artbook-3.jpg', alt: 'Артбук — сторінка' },
-            { src: 'assets/img/artbook-4.jpg', alt: 'Артбук — сторінка' },
+            { src: 'assets/img/nezabuti/artbook-stand.jpg', alt: 'Артбук (не)забуті історії тварин' },
+            { src: 'assets/img/nezabuti/artbook-1.jpg', alt: 'Артбук — розворот' },
+            { src: 'assets/img/nezabuti/artbook-2.jpg', alt: 'Артбук — сторінка' },
+            { src: 'assets/img/nezabuti/artbook-3.jpg', alt: 'Артбук — сторінка' },
+            { src: 'assets/img/nezabuti/artbook-4.jpg', alt: 'Артбук — сторінка' },
           ],
           caption: {
             uk: 'Артбук «(не)забуті історії тварин», 2026 · друк на папері та кальці · 14,8×14,8',
@@ -335,16 +342,16 @@ export const content = {
           title: { uk: 'Ескізи до Артбуку', en: 'Sketches for the artbook' },
           grid: 'grid-sketches',
           works: [
-            { src: 'assets/img/sketch-02.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-03.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-06.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-08.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-10.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-05.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-04.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-01.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-07.jpg', alt: 'Ескіз' },
-            { src: 'assets/img/sketch-09.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-02.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-03.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-06.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-08.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-10.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-05.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-04.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-01.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-07.jpg', alt: 'Ескіз' },
+            { src: 'assets/img/nezabuti/sketch-09.jpg', alt: 'Ескіз' },
           ],
         },
       ],
@@ -365,12 +372,12 @@ export const content = {
           grid: 'grid-2',
           works: [
             {
-              src: 'assets/img/mizh-aksolotl.jpg', alt: 'Аксолотль',
+              src: 'assets/img/mizh/mizh-aksolotl.jpg', alt: 'Аксолотль',
               title: { uk: '«Аксолотль», 2025', en: '“Axolotl”, 2025' },
               materials: { uk: 'олія на полотні, нитка · 70×80 см', en: 'oil on canvas, thread · 70×80 cm' },
             },
             {
-              src: 'assets/img/mizh-perehuznia.jpg', alt: 'Перегузня',
+              src: 'assets/img/mizh/mizh-perehuznia.jpg', alt: 'Перегузня',
               title: { uk: '«Перегузня», 2025', en: '“Marbled Polecat”, 2025' },
               materials: { uk: 'олія на полотні, нитка · 70×80 см', en: 'oil on canvas, thread · 70×80 cm' },
             },
@@ -397,17 +404,17 @@ export const content = {
           grid: 'grid-3',
           works: [
             {
-              src: 'assets/img/leleka.jpg', alt: 'Лелека',
+              src: 'assets/img/istorii/leleka.jpg', alt: 'Лелека',
               title: { uk: '«Лелека», 2025', en: '“Stork”, 2025' },
               materials: { uk: 'олія на полотні · 75×150', en: 'oil on canvas · 75×150' },
             },
             {
-              src: 'assets/img/nikudy-tikaty.jpg', alt: 'Нікуди тікати',
+              src: 'assets/img/istorii/nikudy-tikaty.jpg', alt: 'Нікуди тікати',
               title: { uk: '«Нікуди тікати», 2025', en: '“Nowhere to Run”, 2025' },
               materials: { uk: 'олія на полотні · 75×150', en: 'oil on canvas · 75×150' },
             },
             {
-              src: 'assets/img/u-travi-zhyve-vohon.jpg', alt: 'У траві живе вогонь',
+              src: 'assets/img/istorii/u-travi-zhyve-vohon.jpg', alt: 'У траві живе вогонь',
               title: { uk: '«У траві живе вогонь», 2025', en: '“Fire Lives in the Grass”, 2025' },
               materials: { uk: 'олія на полотні · 65×150', en: 'oil on canvas · 65×150' },
             },
@@ -425,22 +432,22 @@ export const content = {
           grid: 'grid-2',
           works: [
             {
-              src: 'assets/img/stayni.jpg', alt: 'Стайні — це що, військовий об’єкт?',
+              src: 'assets/img/hrafika/stayni.jpg', alt: 'Стайні — це що, військовий об’єкт?',
               title: { uk: '«Стайні — це що, військовий об’єкт?», 2024', en: '“Stables — a military object, then?”, 2024' },
               materials: { uk: 'олівець на папері · 20×28 см', en: 'pencil on paper · 20×28 cm' },
             },
             {
-              src: 'assets/img/morski-konyky.jpg', alt: 'Морські коники',
+              src: 'assets/img/hrafika/morski-konyky.jpg', alt: 'Морські коники',
               title: { uk: '«Морські коники», 2026', en: '“Seahorses”, 2026' },
               materials: { uk: 'олівець, папір, калька · 13×29', en: 'pencil, paper, tracing paper · 13×29' },
             },
             {
-              src: 'assets/img/nezlamnist.jpg', alt: 'Де закінчується незламність і починається безвідповідальність?',
+              src: 'assets/img/hrafika/nezlamnist.jpg', alt: 'Де закінчується незламність і починається безвідповідальність?',
               title: { uk: '«Де закінчується незламність і починається безвідповідальність?», 2026', en: '“Where does resilience end and irresponsibility begin?”, 2026' },
               materials: { uk: 'олівець, папір · 21×29', en: 'pencil, paper · 21×29' },
             },
             {
-              src: 'assets/img/lis-zghoriv.jpg', alt: 'Ліс згорів, доля тварин невідома',
+              src: 'assets/img/hrafika/lis-zghoriv.jpg', alt: 'Ліс згорів, доля тварин невідома',
               title: { uk: '«Ліс згорів, доля тварин невідома», 2025', en: '“The forest burned down, the fate of the animals is unknown”, 2025' },
               materials: { uk: 'олівець, папір · 21×29', en: 'pencil, paper · 21×29' },
             },
@@ -464,12 +471,12 @@ export const content = {
           grid: 'grid-2',
           works: [
             {
-              src: 'assets/img/zmiya-sam-sobi-zdobych.jpg', alt: 'Сам собі здобич',
+              src: 'assets/img/zmiya/zmiya-sam-sobi-zdobych.jpg', alt: 'Сам собі здобич',
               title: { uk: '«Сам собі здобич», 2024', en: '“Prey to Oneself”, 2024' },
               materials: { uk: 'олія на полотні · 120×50 см', en: 'oil on canvas · 120×50 cm' },
             },
             {
-              src: 'assets/img/zmiya-shcho-ty-vidchuvaesh.jpg', alt: 'Що ти відчуваєш до змії, коли прожив її життя?',
+              src: 'assets/img/zmiya/zmiya-shcho-ty-vidchuvaesh.jpg', alt: 'Що ти відчуваєш до змії, коли прожив її життя?',
               title: { uk: '«Що ти відчуваєш до змії, коли прожив її життя?», 2024', en: '“What do you feel towards the snake once you have lived its life?”, 2024' },
               materials: { uk: 'олія на полотні · 100×55 см', en: 'oil on canvas · 100×55 cm' },
             },
@@ -479,7 +486,7 @@ export const content = {
           grid: 'grid-1',
           works: [
             {
-              src: 'assets/img/zmiya-nytka.jpg', alt: 'Нитка',
+              src: 'assets/img/zmiya/zmiya-nytka.jpg', alt: 'Нитка',
               title: { uk: '«Нитка», 2024', en: '“Thread”, 2024' },
               materials: { uk: 'олія на полотні · 80×20 см', en: 'oil on canvas · 80×20 cm' },
             },
@@ -503,7 +510,7 @@ export const content = {
           grid: 'grid-1',
           works: [
             {
-              src: 'assets/img/lebid.jpg', alt: 'Лебідь',
+              src: 'assets/img/stezhky/lebid.jpg', alt: 'Лебідь',
               title: { uk: '«Лебідь», 2023', en: '“Swan”, 2023' },
               materials: { uk: 'олія на полотні, вугільний олівець · 120×80 см', en: 'oil on canvas, charcoal pencil · 120×80 cm' },
             },
@@ -513,12 +520,12 @@ export const content = {
           grid: 'grid-2',
           works: [
             {
-              src: 'assets/img/kazhan.jpg', alt: 'Кажан',
+              src: 'assets/img/stezhky/kazhan.jpg', alt: 'Кажан',
               title: { uk: '«Кажан», 2023', en: '“Bat”, 2023' },
               materials: { uk: 'олія на полотні, вугільний олівець · 80×120 см', en: 'oil on canvas, charcoal pencil · 80×120 cm' },
             },
             {
-              src: 'assets/img/zviri.jpg', alt: 'Звірі',
+              src: 'assets/img/stezhky/zviri.jpg', alt: 'Звірі',
               title: { uk: '«Звірі»', en: '“Beasts”' },
               materials: { uk: 'олія на полотні, вугільний олівець · 125×85 см', en: 'oil on canvas, charcoal pencil · 125×85 cm' },
             },

@@ -19,6 +19,9 @@ import { content as defaultContent } from './content.js';
 const csvUrl = (id, gid) =>
   `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${encodeURIComponent(gid)}`;
 
+/** Чи є Лінк-URL прямим відеофайлом (для split-плеєра). */
+const VIDEO_FILE_RE = /\.(mp4|webm|mov|m4v)(\?|#|$)/i;
+
 /**
  * Головна функція. Вантажить і збирає контент; null → лишається дефолт.
  */
@@ -151,6 +154,8 @@ export function buildSections(rows) {
         section = { type: 'header', groups: [] };
         group = { grid: 'grid-1', works: [] };
       } else if (kind === 'split' || kind === 'split-reverse') {
+        const imgSrc = (o['Зображення'] || '').trim();
+        const vSrc = (o['Лінк-URL'] || '').trim();
         section = {
           type: 'split',
           ...(kind === 'split-reverse' ? { reverse: true } : {}),
@@ -158,12 +163,13 @@ export function buildSections(rows) {
           title: title || { uk: '', en: '' },
           paragraphs: toParagraphs(o),
           link: buildLink(o),
-          image: {
-            src: (o['Зображення'] || '').trim(),
-            alt: (title && title.uk) || '',
-            ...(caption ? { caption } : {}),
-          },
+          ...(imgSrc ? { image: { src: imgSrc, alt: (title && title.uk) || '', ...(caption ? { caption } : {}) } } : {}),
+          // Впорядкований список медіа (як у таблиці): спершу зображення з
+          // рядка секції (якщо є) чи відео-лінк, далі — наступні рядки `work`.
+          media: [],
         };
+        if (imgSrc) section.media.push({ type: 'image', src: imgSrc, alt: (title && title.uk) || '', ...(caption ? { caption } : {}) });
+        if (VIDEO_FILE_RE.test(vSrc)) section.media.push({ type: 'video', src: vSrc });
       } else { // gallery
         section = { type: 'gallery', title: title || { uk: '', en: '' }, paragraphs: toParagraphs(o), link: buildLink(o), groups: [] };
         // перша група успадковує сітку й (опційно) підпис із рядка секції
@@ -186,6 +192,19 @@ export function buildSections(rows) {
 
     if (type === 'work') {
       if (!section) continue;
+      // У split-секції рядок `work` — це відео (Лінк-URL = mp4) або зображення
+      // (Зображення). Додаємо в section.media У ПОРЯДКУ рядків таблиці.
+      if (section.type === 'split') {
+        const link = (o['Лінк-URL'] || '').trim();
+        const img = (o['Зображення'] || '').trim();
+        if (VIDEO_FILE_RE.test(link)) (section.media ??= []).push({ type: 'video', src: link });
+        else if (img) {
+          const wt = bi(o, 'Заголовок (укр)', 'Заголовок (eng)');
+          const wcap = bi(o, 'Підпис (укр)', 'Підпис (eng)');
+          (section.media ??= []).push({ type: 'image', src: img, alt: (wt && wt.uk) || '', ...(wcap ? { caption: wcap } : {}) });
+        }
+        continue;
+      }
       if (!group) group = { grid: 'grid-2', works: [] }; // на випадок роботи без секції-галереї
       const title = bi(o, 'Заголовок (укр)', 'Заголовок (eng)');
       const price = (o['Ціна'] || '').trim();
